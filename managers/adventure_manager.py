@@ -91,8 +91,10 @@ class AdventureManager:
         }
     }
 
-    def __init__(self, db: DataBase, storage_ring_manager: "StorageRingManager" = None):
+    def __init__(self, db: DataBase, storage_ring_manager: "StorageRingManager" = None, config_manager=None):
         self.db = db
+        if config_manager is not None:
+            self.CONFIG_FILE = config_manager.config_path("adventure_config.json")
         self.storage_ring_manager = storage_ring_manager
         self._route_cooldowns: Dict[str, Dict[str, int]] = {}
         self.routes: Dict[str, dict] = {}
@@ -132,7 +134,7 @@ class AdventureManager:
         """加载配置文件并在失败时回退到默认配置"""
         if self.CONFIG_FILE.exists():
             try:
-                with open(self.CONFIG_FILE, "r", encoding="utf-8") as f:
+                with open(self.CONFIG_FILE, "r", encoding="utf-8-sig") as f:
                     data = json.load(f)
                     logger.info("已加载 adventure_config.json")
                     return data
