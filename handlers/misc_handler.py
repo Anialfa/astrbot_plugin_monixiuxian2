@@ -14,7 +14,7 @@ class MiscHandler:
     async def handle_help(self, event: AstrMessageEvent):
         """显示帮助信息"""
         help_text = (
-            "📖 修仙指令大全 v3.1.3+alchemy.2\n"
+            "📖 修仙指令大全 v3.1.4\n"
             "━━━━━━━━━━━━━━━\n"
             "\n"
             "📖【入门 & 基础】\n"

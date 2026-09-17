@@ -4,7 +4,7 @@
   <img src="logo.png" alt="模拟修仙" width="200">
 </p>
 
-> **版本:** v3.1.3+alchemy.2<br>
+> **版本:** v3.1.4<br>
 > **许可证:** AGPL-3.0  
 > **作者:** xiaojuwa  
 > **Fork 维护:** [wearshoes/astrbot_plugin_monixiuxian2](https://github.com/wearshoes/astrbot_plugin_monixiuxian2)<br>
@@ -18,6 +18,11 @@
 ---
 
 ## 🌟 特色功能
+
+### v3.1.4 Fork 更新通道（2026-09-17）
+
+- 使用正常递增的版本号，便于 AstrBot 比较版本；包含此前数据库、库存事务、炼丹扩充与排序修复。
+- 更新仓库为 `wearshoes/astrbot_plugin_monixiuxian2`。仓库安装源跟随默认分支 `main`，推送后可在 AstrBot 控制台更新并自动重载插件。
 
 ### v3.1.3+alchemy.2 配方排序修正（2026-09-17）
 
@@ -318,6 +323,8 @@ https://github.com/wearshoes/astrbot_plugin_monixiuxian2
 5. 发送 `我要修仙` 开始体验！
 
 本分支沿用插件 ID `astrbot_plugin_monixiuxian2`，升级现有安装时保留对应的 `data/plugin_data/` 玩家数据目录，并先备份数据库与自定义配置。后续从本 fork 更新可保留分支功能。
+
+从原作者市场版本迁移时，除修改插件 `metadata.yaml` 的 `repo` 并重载外，还需将 AstrBot 保存的插件安装源切换为仓库安装源（`repository`），绑定本 fork。仅修改 `repo` 不会覆盖已有市场绑定。内置更新会替换整个插件目录，因此目录内自定义的 `config/*.json` 需要提前备份；玩家数据和控制台插件配置位于目录外。
 
 ## 回归检查
 
