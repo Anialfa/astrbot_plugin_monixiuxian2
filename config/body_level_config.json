@@ -206,7 +206,7 @@
     {
         "level_name": "钢筋境中期",
         "exp_needed": 2000000,
-        "success_rate": 0.22,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 120,
         "breakthrough_blood_qi_gain": 3800,
         "breakthrough_mental_power_gain": 1500,
@@ -218,7 +218,7 @@
     {
         "level_name": "钢筋境后期",
         "exp_needed": 3500000,
-        "success_rate": 0.2,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 120,
         "breakthrough_blood_qi_gain": 5500,
         "breakthrough_mental_power_gain": 2200,
@@ -230,7 +230,7 @@
     {
         "level_name": "玄体境初期",
         "exp_needed": 6000000,
-        "success_rate": 0.18,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 150,
         "breakthrough_blood_qi_gain": 8000,
         "breakthrough_mental_power_gain": 3300,
@@ -242,7 +242,7 @@
     {
         "level_name": "玄体境中期",
         "exp_needed": 10000000,
-        "success_rate": 0.15,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 150,
         "breakthrough_blood_qi_gain": 13000,
         "breakthrough_mental_power_gain": 5500,
@@ -254,7 +254,7 @@
     {
         "level_name": "玄体境后期",
         "exp_needed": 18000000,
-        "success_rate": 0.12,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 150,
         "breakthrough_blood_qi_gain": 18000,
         "breakthrough_mental_power_gain": 7500,
@@ -278,7 +278,7 @@
     {
         "level_name": "金刚境中期",
         "exp_needed": 50000000,
-        "success_rate": 0.09,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 180,
         "breakthrough_blood_qi_gain": 42000,
         "breakthrough_mental_power_gain": 18000,
@@ -290,7 +290,7 @@
     {
         "level_name": "金刚境后期",
         "exp_needed": 80000000,
-        "success_rate": 0.08,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 180,
         "breakthrough_blood_qi_gain": 58000,
         "breakthrough_mental_power_gain": 24000,
@@ -302,7 +302,7 @@
     {
         "level_name": "不灭境初期",
         "exp_needed": 130000000,
-        "success_rate": 0.07,
+        "success_rate": 0.1,
         "breakthrough_lifespan_gain": 200,
         "breakthrough_blood_qi_gain": 90000,
         "breakthrough_mental_power_gain": 38000,
@@ -314,7 +314,7 @@
     {
         "level_name": "不灭境中期",
         "exp_needed": 200000000,
-        "success_rate": 0.06,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 200,
         "breakthrough_blood_qi_gain": 150000,
         "breakthrough_mental_power_gain": 62000,
@@ -326,7 +326,7 @@
     {
         "level_name": "不灭境后期",
         "exp_needed": 350000000,
-        "success_rate": 0.05,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 200,
         "breakthrough_blood_qi_gain": 220000,
         "breakthrough_mental_power_gain": 90000,
@@ -338,7 +338,7 @@
     {
         "level_name": "神体境初期",
         "exp_needed": 600000000,
-        "success_rate": 0.04,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 250,
         "breakthrough_blood_qi_gain": 330000,
         "breakthrough_mental_power_gain": 135000,
@@ -350,7 +350,7 @@
     {
         "level_name": "神体境中期",
         "exp_needed": 1200000000,
-        "success_rate": 0.03,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 250,
         "breakthrough_blood_qi_gain": 500000,
         "breakthrough_mental_power_gain": 200000,
@@ -362,7 +362,7 @@
     {
         "level_name": "神体境后期",
         "exp_needed": 3000000000,
-        "success_rate": 0.02,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 250,
         "breakthrough_blood_qi_gain": 700000,
         "breakthrough_mental_power_gain": 280000,
@@ -374,7 +374,7 @@
     {
         "level_name": "肉身成圣",
         "exp_needed": 6000000000,
-        "success_rate": 0.01,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 300,
         "breakthrough_blood_qi_gain": 1300000,
         "breakthrough_mental_power_gain": 550000,
@@ -386,7 +386,7 @@
     {
         "level_name": "地仙体魄",
         "exp_needed": 12000000000,
-        "success_rate": 0.001,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 350,
         "breakthrough_blood_qi_gain": 1900000,
         "breakthrough_mental_power_gain": 780000,
@@ -398,7 +398,7 @@
     {
         "level_name": "天仙体魄",
         "exp_needed": 20000000000,
-        "success_rate": 0.0005,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 400,
         "breakthrough_blood_qi_gain": 2700000,
         "breakthrough_mental_power_gain": 1100000,
@@ -410,7 +410,7 @@
     {
         "level_name": "金刚不坏",
         "exp_needed": 35000000000,
-        "success_rate": 0.0002,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 500,
         "breakthrough_blood_qi_gain": 3800000,
         "breakthrough_mental_power_gain": 1550000,
@@ -422,7 +422,7 @@
     {
         "level_name": "混元无极体",
         "exp_needed": 60000000000,
-        "success_rate": 0.0001,
+        "success_rate": 0.0,
         "breakthrough_lifespan_gain": 600,
         "breakthrough_blood_qi_gain": 7000000,
         "breakthrough_mental_power_gain": 2800000,

@@ -35,17 +35,29 @@ class SpiritFarmHandlers:
             yield event.plain_result(
                 "🌱 可种植的灵草\n"
                 "━━━━━━━━━━━━━━━\n"
-                "灵草 - 1小时 (修为+500)\n"
-                "血灵草 - 2小时 (修为+1500)\n"
-                "冰心草 - 4小时 (修为+4000)\n"
-                "火焰花 - 8小时 (修为+10000)\n"
-                "九叶灵芝 - 24小时 (修为+30000)\n"
+                "灵草 - 45分钟（每株收获4份，修为+500）\n"
+                "血灵草 - 45分钟（每株收获3份，修为+1500）\n"
+                "冰心草 - 45分钟（每株收获3份，修为+4000）\n"
+                "火焰花 - 45分钟（每株收获2份，修为+10000）\n"
+                "九叶灵芝 - 45分钟（每株收获2份，修为+30000）\n"
                 "━━━━━━━━━━━━━━━\n"
-                "💡 使用 /种植 <灵草名>"
+                "💡 使用 /种植 <灵草名> [数量]，例如 /种植 灵草 3"
             )
             return
         
-        success, msg = await self.mgr.plant_herb(player, herb_name.strip())
+        parts = herb_name.strip().rsplit(maxsplit=1)
+        herb_name = parts[0]
+        quantity = 1
+        if len(parts) == 2:
+            try:
+                quantity = int(parts[1])
+            except ValueError:
+                yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
+                return
+            if quantity <= 0:
+                yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
+                return
+        success, msg = await self.mgr.plant_herbs(player, herb_name, quantity)
         yield event.plain_result(msg)
     
     @player_required

@@ -50,15 +50,24 @@ class PillHandler:
         if not pill_name or pill_name.strip() == "":
             yield event.plain_result(
                 "请指定要服用的丹药名称！\n"
-                f"💡 使用方法：{CMD_USE_PILL} [丹药名称]\n"
-                f"💡 例如：{CMD_USE_PILL} 炼气丹"
+                f"💡 使用方法：{CMD_USE_PILL} [丹药名称] [数量]\n"
+                f"💡 例如：{CMD_USE_PILL} 炼气丹 10"
             )
             return
 
-        pill_name = pill_name.strip()
-
-        # 使用丹药
-        success, message = await self.pill_manager.use_pill(player, pill_name)
+        parts = pill_name.strip().rsplit(maxsplit=1)
+        pill_name = parts[0]
+        quantity = 1
+        if len(parts) == 2:
+            try:
+                quantity = int(parts[1])
+            except ValueError:
+                yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
+                return
+            if quantity <= 0:
+                yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
+                return
+        success, message = await self.pill_manager.use_pills(player, pill_name, quantity)
 
         if success:
             yield event.plain_result(message)
