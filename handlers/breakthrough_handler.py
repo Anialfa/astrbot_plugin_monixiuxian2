@@ -48,6 +48,7 @@ class BreakthroughHandler:
         required_exp = next_level_data.get("exp_needed", 0)
         base_success_rate = next_level_data.get("success_rate", 0.5)
         temp_bonus = modifiers["temp_bonus"]
+        persistent_bonus = max(0, player.level_up_rate) / 100
 
         # 检查修为是否满足
         exp_satisfied = player.experience >= required_exp
@@ -60,7 +61,7 @@ class BreakthroughHandler:
                 pill_data.get("target_level_index") == player.level_index + 1):
                 max_rate = pill_data.get("max_success_rate", 1.0)
                 breakthrough_bonus = pill_data.get("breakthrough_bonus", 0)
-                final_rate = min(base_success_rate + temp_bonus + breakthrough_bonus, max_rate)
+                final_rate = min(base_success_rate + persistent_bonus + temp_bonus + breakthrough_bonus, max_rate)
                 available_pills.append({
                     "name": pill_name,
                     "rank": pill_data.get("rank", ""),
@@ -85,6 +86,8 @@ class BreakthroughHandler:
 
         if temp_bonus:
             info_lines.append(f"临时丹药加成：{temp_bonus:+.1%}\n")
+        if persistent_bonus:
+            info_lines.append(f"角色突破加成：+{persistent_bonus:.1%}\n")
         death_reduce = 1 - modifiers["permanent_death_multiplier"]
         if death_reduce > 0:
             info_lines.append(f"突破死亡概率降低：{death_reduce:.1%}\n")

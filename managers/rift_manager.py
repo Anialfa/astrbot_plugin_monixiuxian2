@@ -323,6 +323,7 @@ class RiftManager:
             "gold": gold_reward,
             "event": event["desc"],
             "items": dropped_items,
+            "rift_id": rift_id,
             "rift_name": rift_name
         }
         

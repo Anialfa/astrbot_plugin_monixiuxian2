@@ -110,6 +110,13 @@ class PillManager:
         Returns:
             (是否成功, 消息)
         """
+        return await self.use_pills(player, pill_name, 1)
+
+    @atomic_operation
+    async def use_pills(self, player: Player, pill_name: str, quantity: int = 1) -> Tuple[bool, str]:
+        """连续服用指定数量的同种丹药，并保证整批操作原子完成。"""
+        if not isinstance(quantity, int) or quantity <= 0:
+            return False, "服用数量必须是大于 0 的整数。"
         fresh = await self.db.get_player_by_id(player.user_id)
         if not fresh:
             return False, "你还未踏入修仙之路！"
@@ -118,6 +125,8 @@ class PillManager:
         inventory = player.get_pills_inventory()
         if pill_name not in inventory or inventory[pill_name] <= 0:
             return False, f"你的背包中没有【{pill_name}】！"
+        if inventory[pill_name] < quantity:
+            return False, f"【{pill_name}】数量不足！当前持有 {inventory[pill_name]} 颗，本次需要 {quantity} 颗。"
 
         # 获取丹药配置
         pill_data = self.get_pill_by_name(pill_name)
@@ -147,23 +156,30 @@ class PillManager:
         effect_type = pill_data.get("effect_type", "instant")
         subtype = pill_data.get("subtype", "")
 
-        if subtype == "exp":
-            # 修为丹
-            return await self._use_exp_pill(player, pill_name, pill_data)
-        elif subtype == "resurrection":
-            # 回生丹
-            return await self._use_resurrection_pill(player, pill_name, pill_data)
-        elif effect_type == "temporary":
-            # 临时效果丹药
-            return await self._use_temporary_pill(player, pill_name, pill_data)
-        elif effect_type == "permanent":
-            # 永久属性丹药
-            return await self._use_permanent_pill(player, pill_name, pill_data)
-        elif effect_type == "instant":
-            # 瞬间效果丹药
-            return await self._use_instant_pill(player, pill_name, pill_data)
-        else:
-            return False, f"未知的丹药类型：{effect_type}"
+        consumed = 0
+        last_message = ""
+        for _ in range(quantity):
+            if subtype == "exp":
+                success, message = await self._use_exp_pill(player, pill_name, pill_data)
+            elif subtype == "resurrection":
+                success, message = await self._use_resurrection_pill(player, pill_name, pill_data)
+            elif effect_type == "temporary":
+                success, message = await self._use_temporary_pill(player, pill_name, pill_data)
+            elif effect_type == "permanent":
+                success, message = await self._use_permanent_pill(player, pill_name, pill_data)
+            elif effect_type == "instant":
+                success, message = await self._use_instant_pill(player, pill_name, pill_data)
+            else:
+                return False, f"未知的丹药类型：{effect_type}"
+            if not success:
+                if consumed == 0:
+                    return False, message
+                return True, f"已服用【{pill_name}】×{consumed}，后续无法继续服用：{message}"
+            consumed += 1
+            last_message = message
+        if quantity == 1:
+            return True, last_message
+        return True, f"✨ 已连续服用【{pill_name}】×{consumed}！\n{last_message}"
 
     async def _use_exp_pill(self, player: Player, pill_name: str, pill_data: dict) -> Tuple[bool, str]:
         """使用修为丹"""

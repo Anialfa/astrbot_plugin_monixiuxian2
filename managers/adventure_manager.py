@@ -300,7 +300,9 @@ class AdventureManager:
             "gold_reward": rewards["gold"],
             "items": dropped_items,
             "duration": effective_duration,
-            "bounty_tag": route.get("bounty_tag", "adventure"),
+            # 使用路线唯一标签，防止一个悬赏被同类但不对应的历练路线推进。
+            "bounty_tag": f"adventure:{route['key']}",
+            "legacy_bounty_tag": route.get("bounty_tag", "adventure"),
             "bounty_progress": max(1, route.get("bounty_progress", 1) + event.get("bonus_progress", 0))
         }
         return True, msg, reward_data

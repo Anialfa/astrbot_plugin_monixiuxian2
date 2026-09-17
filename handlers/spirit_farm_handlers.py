@@ -35,17 +35,47 @@ class SpiritFarmHandlers:
             yield event.plain_result(
                 "🌱 可种植的灵草\n"
                 "━━━━━━━━━━━━━━━\n"
-                "灵草 - 1小时 (修为+500)\n"
-                "血灵草 - 2小时 (修为+1500)\n"
-                "冰心草 - 4小时 (修为+4000)\n"
-                "火焰花 - 8小时 (修为+10000)\n"
-                "九叶灵芝 - 24小时 (修为+30000)\n"
+                "灵草 - 45分钟（每株收获4份，修为+500）\n"
+                "血灵草 - 45分钟（每株收获3份，修为+1500）\n"
+                "冰心草 - 45分钟（每株收获3份，修为+4000）\n"
+                "火焰花 - 45分钟（每株收获2份，修为+10000）\n"
+                "九叶灵芝 - 45分钟（每株收获2份，修为+30000）\n"
                 "━━━━━━━━━━━━━━━\n"
-                "💡 使用 /种植 <灵草名>"
+                "💡 使用 /种植 <灵草名> [数量]，例如 /种植 灵草 3"
             )
             return
         
-        success, msg = await self.mgr.plant_herb(player, herb_name.strip())
+        def parse_herb_and_quantity(value: str):
+            normalized = value.strip().replace("　", " ")
+            normalized = normalized.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+            parts = normalized.rsplit(maxsplit=1)
+            if len(parts) == 2:
+                return parts[0], int(parts[1])
+            return normalized, 1
+
+        try:
+            herb_name, quantity = parse_herb_and_quantity(herb_name)
+        except ValueError:
+            yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
+            return
+
+        # AstrBot 的指令绑定可能忽略多余参数，改从原始消息补解析数量，
+        # 以确保“种植 灵草 3”会一次占用三个种植格。
+        if quantity == 1:
+            try:
+                raw_message = event.get_message_str().strip().lstrip("/")
+                if raw_message.startswith("种植"):
+                    raw_message = raw_message[len("种植"):].strip()
+                raw_herb_name, raw_quantity = parse_herb_and_quantity(raw_message)
+                if raw_herb_name == herb_name:
+                    quantity = raw_quantity
+            except (AttributeError, ValueError):
+                pass
+
+        if quantity <= 0:
+            yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
+            return
+        success, msg = await self.mgr.plant_herbs(player, herb_name, quantity)
         yield event.plain_result(msg)
     
     @player_required

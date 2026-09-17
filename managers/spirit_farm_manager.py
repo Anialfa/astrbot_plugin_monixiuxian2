@@ -14,11 +14,11 @@ __all__ = ["SpiritFarmManager"]
 
 # 灵草配置 (wither_time: 成熟后枯萎时间，默认48小时)
 SPIRIT_HERBS = {
-    "灵草": {"grow_time": 3600, "exp_yield": 500, "gold_yield": 100, "wither_time": 172800},
-    "血灵草": {"grow_time": 7200, "exp_yield": 1500, "gold_yield": 300, "wither_time": 172800},
-    "冰心草": {"grow_time": 14400, "exp_yield": 4000, "gold_yield": 800, "wither_time": 172800},
-    "火焰花": {"grow_time": 28800, "exp_yield": 10000, "gold_yield": 2000, "wither_time": 172800},
-    "九叶灵芝": {"grow_time": 86400, "exp_yield": 30000, "gold_yield": 6000, "wither_time": 172800},
+    "灵草": {"grow_time": 2700, "harvest_yield": 4, "exp_yield": 500, "gold_yield": 100, "wither_time": 172800},
+    "血灵草": {"grow_time": 2700, "harvest_yield": 3, "exp_yield": 1500, "gold_yield": 300, "wither_time": 172800},
+    "冰心草": {"grow_time": 2700, "harvest_yield": 3, "exp_yield": 4000, "gold_yield": 800, "wither_time": 172800},
+    "火焰花": {"grow_time": 2700, "harvest_yield": 2, "exp_yield": 10000, "gold_yield": 2000, "wither_time": 172800},
+    "九叶灵芝": {"grow_time": 2700, "harvest_yield": 2, "exp_yield": 30000, "gold_yield": 6000, "wither_time": 172800},
 }
 
 # 灵田等级配置
@@ -83,11 +83,17 @@ class SpiritFarmManager:
         )
     
     async def plant_herb(self, player: Player, herb_name: str) -> Tuple[bool, str]:
-        """种植灵草"""
+        return await self.plant_herbs(player, herb_name, 1)
+
+    @atomic_operation
+    async def plant_herbs(self, player: Player, herb_name: str, quantity: int = 1) -> Tuple[bool, str]:
+        """一次种植指定数量的同种灵草。"""
         if herb_name not in SPIRIT_HERBS:
             herbs_list = "、".join(SPIRIT_HERBS.keys())
             return False, f"❌ 未知的灵草。可种植：{herbs_list}"
         
+        if not isinstance(quantity, int) or quantity <= 0:
+            return False, "❌ 种植数量必须是大于 0 的整数。"
         farm = await self.get_user_farm(player.user_id)
         if not farm:
             return False, "❌ 你还没有灵田！使用 /开垦灵田"
@@ -96,19 +102,22 @@ class SpiritFarmManager:
         max_slots = level_config["slots"]
         crops = farm["crops"]
         
-        if len(crops) >= max_slots:
+        available_slots = max_slots - len(crops)
+        if available_slots <= 0:
             return False, f"❌ 灵田已满！最多种植 {max_slots} 株。"
+        if quantity > available_slots:
+            return False, f"❌ 灵田空位不足！当前可种植 {available_slots} 株，本次需要 {quantity} 株。"
         
         # 种植
         herb_config = SPIRIT_HERBS[herb_name]
         plant_time = int(time.time())
         mature_time = plant_time + herb_config["grow_time"]
         
-        crops.append({
+        crops.extend({
             "name": herb_name,
             "plant_time": plant_time,
             "mature_time": mature_time
-        })
+        } for _ in range(quantity))
         
         await self.db.conn.execute(
             "UPDATE spirit_farms SET crops = ? WHERE user_id = ?",
@@ -116,10 +125,10 @@ class SpiritFarmManager:
         )
         await self.db.conn.commit()
         
-        grow_hours = herb_config["grow_time"] // 3600
+        grow_minutes = herb_config["grow_time"] // 60
         return True, (
-            f"🌱 成功种植【{herb_name}】！\n"
-            f"成熟时间：约 {grow_hours} 小时\n"
+            f"🌱 成功种植【{herb_name}】×{quantity}！\n"
+            f"成熟时间：约 {grow_minutes} 分钟\n"
             f"当前种植：{len(crops)}/{max_slots}"
         )
     
@@ -168,8 +177,7 @@ class SpiritFarmManager:
             herb_config = SPIRIT_HERBS.get(herb_name, SPIRIT_HERBS["灵草"])
             total_exp += herb_config["exp_yield"]
             total_gold += herb_config["gold_yield"]
-            harvest_details.append(herb_name)
-            herb_counts[herb_name] = herb_counts.get(herb_name, 0) + 1
+            herb_counts[herb_name] = herb_counts.get(herb_name, 0) + herb_config.get("harvest_yield", 1)
         
         # 应用奖励
         if total_exp > 0 or total_gold > 0:
@@ -197,8 +205,8 @@ class SpiritFarmManager:
         # 构建返回消息
         msg_lines = ["🌾 收获结果", "━━━━━━━━━━━━━━━"]
         
-        if harvest_details:
-            msg_lines.append(f"收获：{', '.join(harvest_details)}")
+        if herb_counts:
+            msg_lines.append(f"收获：{'、'.join(f'{name}×{count}' for name, count in herb_counts.items())}")
             msg_lines.append(f"获得修为：+{total_exp:,}")
             msg_lines.append(f"获得灵石：+{total_gold:,}")
             if stored_items:

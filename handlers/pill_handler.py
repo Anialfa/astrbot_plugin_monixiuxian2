@@ -50,15 +50,42 @@ class PillHandler:
         if not pill_name or pill_name.strip() == "":
             yield event.plain_result(
                 "请指定要服用的丹药名称！\n"
-                f"💡 使用方法：{CMD_USE_PILL} [丹药名称]\n"
-                f"💡 例如：{CMD_USE_PILL} 炼气丹"
+                f"💡 使用方法：{CMD_USE_PILL} [丹药名称] [数量]\n"
+                f"💡 例如：{CMD_USE_PILL} 炼气丹 10"
             )
             return
 
-        pill_name = pill_name.strip()
+        def parse_pill_and_quantity(value: str):
+            normalized = value.strip().replace("　", " ")
+            normalized = normalized.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+            parts = normalized.rsplit(maxsplit=1)
+            if len(parts) == 2:
+                return parts[0], int(parts[1])
+            return normalized, 1
 
-        # 使用丹药
-        success, message = await self.pill_manager.use_pill(player, pill_name)
+        try:
+            pill_name, quantity = parse_pill_and_quantity(pill_name)
+        except ValueError:
+            yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
+            return
+
+        # AstrBot 的指令绑定可能只传入第一个字符串参数；此时从原始消息
+        # 补解析末尾数量，确保“服用丹药 玄灵丹 3”能真实服用三颗。
+        if quantity == 1:
+            try:
+                raw_message = event.get_message_str().strip().lstrip("/")
+                if raw_message.startswith(CMD_USE_PILL):
+                    raw_message = raw_message[len(CMD_USE_PILL):].strip()
+                raw_pill_name, raw_quantity = parse_pill_and_quantity(raw_message)
+                if raw_pill_name == pill_name:
+                    quantity = raw_quantity
+            except (AttributeError, ValueError):
+                pass
+
+        if quantity <= 0:
+            yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
+            return
+        success, message = await self.pill_manager.use_pills(player, pill_name, quantity)
 
         if success:
             yield event.plain_result(message)

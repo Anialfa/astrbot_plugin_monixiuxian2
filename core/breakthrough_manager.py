@@ -79,9 +79,12 @@ class BreakthroughManager:
             f"基础成功率：{base_success_rate:.1%}"
         ]
 
-        final_rate = base_success_rate + temp_bonus
+        persistent_bonus = max(0, player.level_up_rate) / 100
+        final_rate = base_success_rate + persistent_bonus + temp_bonus
         max_rate = 1.0  # 默认最大100%
 
+        if persistent_bonus:
+            info_lines.append(f"角色突破加成：+{persistent_bonus:.1%}")
         if temp_bonus:
             info_lines.append(f"临时丹药加成：{temp_bonus:+.1%}")
 
@@ -93,7 +96,7 @@ class BreakthroughManager:
                 max_rate = pill_data.get("max_success_rate", 1.0)
 
                 # 计算加成后的成功率
-                final_rate = min(base_success_rate + temp_bonus + breakthrough_bonus, max_rate)
+                final_rate = min(base_success_rate + persistent_bonus + temp_bonus + breakthrough_bonus, max_rate)
 
                 info_lines.append(f"破境丹加成：+{breakthrough_bonus:.1%}")
                 info_lines.append(f"最大成功率限制：{max_rate:.1%}")
