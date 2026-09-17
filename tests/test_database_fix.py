@@ -57,8 +57,8 @@ async def main(root, live_db=None):
             manager = migrations.MigrationManager(db.conn, None)
             await manager.migrate()
             await db.ext.ensure_system_config_table()
-            assert await fetch(db.conn, 'SELECT version FROM db_info') == [(20,)]
-            assert await fetch(db.conn, 'SELECT COUNT(*) FROM rifts') == [(5,)]
+            assert await fetch(db.conn, 'SELECT version FROM db_info') == [(21,)]
+            assert await fetch(db.conn, 'SELECT COUNT(*) FROM rifts') == [(15,)]
             assert await fetch(db.conn, 'SELECT COUNT(*) FROM spirit_eyes') == [(3,)]
             for table in ('blessed_lands', 'spirit_farms', 'dual_cultivation', 'dual_cultivation_requests', 'combat_cooldowns'):
                 await fetch(db.conn, f'SELECT * FROM {table}')

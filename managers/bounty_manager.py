@@ -53,8 +53,11 @@ class BountyManager:
         }
     }
 
-    def __init__(self, db: DataBase, storage_ring_manager: Optional["StorageRingManager"] = None):
+    def __init__(self, db: DataBase, storage_ring_manager: Optional["StorageRingManager"] = None, config_manager=None):
         self.db = db
+        if config_manager is not None:
+            self.CONFIG_FILE = config_manager.config_path("bounty_templates.json")
+            self.ADVENTURE_CONFIG_FILE = config_manager.config_path("adventure_config.json")
         self.storage_ring_manager = storage_ring_manager
         self._bounty_cache: Dict[str, Dict] = {}
         self.difficulties: Dict[str, dict] = {}
@@ -83,7 +86,7 @@ class BountyManager:
     def _load_config_file(self) -> dict:
         if self.CONFIG_FILE.exists():
             try:
-                with open(self.CONFIG_FILE, "r", encoding="utf-8") as f:
+                with open(self.CONFIG_FILE, "r", encoding="utf-8-sig") as f:
                     return json.load(f)
             except Exception as exc:
                 logger.error(f"加载 bounty_templates.json 失败，将使用默认配置: {exc}")
@@ -94,7 +97,7 @@ class BountyManager:
         if not self.ADVENTURE_CONFIG_FILE.exists():
             return
         try:
-            with open(self.ADVENTURE_CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(self.ADVENTURE_CONFIG_FILE, "r", encoding="utf-8-sig") as f:
                 data = json.load(f)
             for route in data.get("routes", []):
                 tag = str(route.get("bounty_tag", "")).lower()

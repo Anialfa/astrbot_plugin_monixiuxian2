@@ -206,7 +206,7 @@
     {
         "level_name": "元婴中期",
         "exp_needed": 2000000,
-        "success_rate": 0.1,
+        "success_rate": 0.22,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 3500,
         "breakthrough_mental_power_gain": 3500,
@@ -218,7 +218,7 @@
     {
         "level_name": "元婴后期",
         "exp_needed": 3500000,
-        "success_rate": 0.1,
+        "success_rate": 0.2,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 5000,
         "breakthrough_mental_power_gain": 5000,
@@ -230,7 +230,7 @@
     {
         "level_name": "化神初期",
         "exp_needed": 6000000,
-        "success_rate": 0.1,
+        "success_rate": 0.18,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 7500,
         "breakthrough_mental_power_gain": 7500,
@@ -242,7 +242,7 @@
     {
         "level_name": "化神中期",
         "exp_needed": 10000000,
-        "success_rate": 0.1,
+        "success_rate": 0.15,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 12500,
         "breakthrough_mental_power_gain": 12500,
@@ -254,7 +254,7 @@
     {
         "level_name": "化神后期",
         "exp_needed": 18000000,
-        "success_rate": 0.1,
+        "success_rate": 0.12,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 17500,
         "breakthrough_mental_power_gain": 17500,
@@ -278,7 +278,7 @@
     {
         "level_name": "炼虚中期",
         "exp_needed": 50000000,
-        "success_rate": 0.1,
+        "success_rate": 0.09,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 40000,
         "breakthrough_mental_power_gain": 40000,
@@ -290,7 +290,7 @@
     {
         "level_name": "炼虚后期",
         "exp_needed": 80000000,
-        "success_rate": 0.1,
+        "success_rate": 0.08,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 55000,
         "breakthrough_mental_power_gain": 55000,
@@ -302,7 +302,7 @@
     {
         "level_name": "合体初期",
         "exp_needed": 130000000,
-        "success_rate": 0.1,
+        "success_rate": 0.07,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 85000,
         "breakthrough_mental_power_gain": 85000,
@@ -314,7 +314,7 @@
     {
         "level_name": "合体中期",
         "exp_needed": 200000000,
-        "success_rate": 0.0,
+        "success_rate": 0.06,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 140000,
         "breakthrough_mental_power_gain": 140000,
@@ -326,7 +326,7 @@
     {
         "level_name": "合体后期",
         "exp_needed": 350000000,
-        "success_rate": 0.0,
+        "success_rate": 0.05,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 200000,
         "breakthrough_mental_power_gain": 200000,
@@ -338,7 +338,7 @@
     {
         "level_name": "普通大乘",
         "exp_needed": 600000000,
-        "success_rate": 0.0,
+        "success_rate": 0.04,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 300000,
         "breakthrough_mental_power_gain": 300000,
@@ -350,7 +350,7 @@
     {
         "level_name": "强力大乘",
         "exp_needed": 1200000000,
-        "success_rate": 0.0,
+        "success_rate": 0.03,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 450000,
         "breakthrough_mental_power_gain": 450000,
@@ -362,7 +362,7 @@
     {
         "level_name": "顶尖大乘",
         "exp_needed": 3000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.02,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 650000,
         "breakthrough_mental_power_gain": 650000,
@@ -374,7 +374,7 @@
     {
         "level_name": "初通仙窍",
         "exp_needed": 6000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.01,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 1250000,
         "breakthrough_mental_power_gain": 1250000,
@@ -386,7 +386,7 @@
     {
         "level_name": "十二真仙",
         "exp_needed": 12000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.001,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 1750000,
         "breakthrough_mental_power_gain": 1750000,
@@ -398,7 +398,7 @@
     {
         "level_name": "二十四窍真仙",
         "exp_needed": 20000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.0005,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 2500000,
         "breakthrough_mental_power_gain": 2500000,
@@ -410,7 +410,7 @@
     {
         "level_name": "金仙初境",
         "exp_needed": 35000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.0002,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 3500000,
         "breakthrough_mental_power_gain": 3500000,
@@ -422,7 +422,7 @@
     {
         "level_name": "金仙中境",
         "exp_needed": 60000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.0001,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 6500000,
         "breakthrough_mental_power_gain": 6500000,
@@ -434,7 +434,7 @@
     {
         "level_name": "金仙后境",
         "exp_needed": 100000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.00008,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 9000000,
         "breakthrough_mental_power_gain": 9000000,
@@ -446,7 +446,7 @@
     {
         "level_name": "太乙初境",
         "exp_needed": 160000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.00006,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 12000000,
         "breakthrough_mental_power_gain": 12000000,
@@ -458,7 +458,7 @@
     {
         "level_name": "太乙中境",
         "exp_needed": 250000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.00004,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 17000000,
         "breakthrough_mental_power_gain": 17000000,
@@ -470,7 +470,7 @@
     {
         "level_name": "太乙大圆满",
         "exp_needed": 400000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.00003,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 24000000,
         "breakthrough_mental_power_gain": 24000000,
@@ -482,7 +482,7 @@
     {
         "level_name": "大罗初境",
         "exp_needed": 650000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.00002,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 34000000,
         "breakthrough_mental_power_gain": 34000000,
@@ -494,7 +494,7 @@
     {
         "level_name": "大罗中境",
         "exp_needed": 1000000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.00001,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 48000000,
         "breakthrough_mental_power_gain": 48000000,
@@ -506,7 +506,7 @@
     {
         "level_name": "大罗大圆满",
         "exp_needed": 1600000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.000005,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 68000000,
         "breakthrough_mental_power_gain": 68000000,
@@ -518,7 +518,7 @@
     {
         "level_name": "道祖境",
         "exp_needed": 2500000000000,
-        "success_rate": 0.0,
+        "success_rate": 0.000001,
         "breakthrough_lifespan_gain": 50,
         "breakthrough_spiritual_qi_gain": 95000000,
         "breakthrough_mental_power_gain": 95000000,

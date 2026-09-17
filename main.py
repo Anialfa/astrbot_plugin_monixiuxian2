@@ -6,6 +6,7 @@ from astrbot.api.star import Context, Star, StarTools
 from astrbot.api.event import AstrMessageEvent, filter
 from .data import DataBase, MigrationManager
 from .config_manager import ConfigManager
+from .managers.update_manager import UpdateManager, MAINTENANCE_ATTRIBUTE
 from .handlers import (
     MiscHandler, PlayerHandler, EquipmentHandler, BreakthroughHandler, 
     PillHandler, ShopHandler, StorageRingHandler,
@@ -29,12 +30,21 @@ def require_whitelist(func):
         if not self._check_access(event):
             await self._send_access_denied_message(event)
             return
-        async for result in func(self, event, *args, **kwargs):
-            yield result
+        if getattr(self.context, MAINTENANCE_ATTRIBUTE, False) and func.__name__ not in ("handle_plugin_update", "handle_plugin_update_status"):
+            yield event.plain_result("修仙插件正在更新，请稍后再试。")
+            return
+        self._active_handlers += 1
+        try:
+            async for result in func(self, event, *args, **kwargs):
+                yield result
+        finally:
+            self._active_handlers -= 1
     return wrapper
 
 # 指令定义
 CMD_HELP = "修仙帮助"
+CMD_PLUGIN_UPDATE = "修仙更新"
+CMD_PLUGIN_UPDATE_STATUS = "修仙更新状态"
 CMD_START_XIUXIAN = "我要修仙"
 CMD_PLAYER_INFO = "我的信息"
 CMD_START_CULTIVATION = "闭关"
@@ -167,15 +177,17 @@ class XiuXianPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
         super().__init__(context)
         self.config = config
+        self._active_handlers = 0
         _current_dir = Path(__file__).parent
-        self.config_manager = ConfigManager(_current_dir)
 
         files_config = self.config.get("FILES", {})
         db_filename = files_config.get("DATABASE_FILE", "xiuxian_data_v2.db")
         plugin_data_path = StarTools.get_data_dir("astrbot_plugin_monixiuxian2")
         plugin_data_path.mkdir(parents=True, exist_ok=True)
+        self.config_manager = ConfigManager(_current_dir, plugin_data_path)
         db_path = plugin_data_path / db_filename
         self.db = DataBase(str(db_path))
+        self.update_manager = UpdateManager(self, _current_dir, plugin_data_path)
 
         self.misc_handler = MiscHandler(self.db)
         self.player_handler = PlayerHandler(self.db, self.config, self.config_manager)
@@ -211,7 +223,7 @@ class XiuXianPlugin(Star):
         
         # Phase 2: 灵石银行和悬赏令
         self.bank_mgr = BankManager(self.db, self.config)
-        self.bounty_mgr = BountyManager(self.db, self.storage_ring_mgr)
+        self.bounty_mgr = BountyManager(self.db, self.storage_ring_mgr, self.config_manager)
         self.bank_handlers = BankHandlers(self.db, self.bank_mgr)
         self.bounty_handlers = BountyHandlers(self.db, self.bounty_mgr)
         
@@ -282,6 +294,8 @@ class XiuXianPlugin(Star):
         
         # 确保系统配置表存在
         await self.db.ext.ensure_system_config_table()
+        header = await self.update_manager.help_header(self)
+        logger.info(f"【修仙插件】运行时帮助：{header}")
         
         # 启动定时任务
         self.boss_task = asyncio.create_task(self._schedule_boss_spawn())
@@ -292,14 +306,10 @@ class XiuXianPlugin(Star):
         logger.info("【修仙插件】已加载。")
 
     async def terminate(self):
-        if self.boss_task:
-            self.boss_task.cancel()
-        if self.loan_check_task:
-            self.loan_check_task.cancel()
-        if self.spirit_eye_task:
-            self.spirit_eye_task.cancel()
-        if self.bounty_check_task:
-            self.bounty_check_task.cancel()
+        tasks = [task for task in (self.boss_task, self.loan_check_task, self.spirit_eye_task, self.bounty_check_task) if task]
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
         await self.db.close()
         logger.info("【修仙插件】已卸载。")
         
@@ -584,6 +594,16 @@ class XiuXianPlugin(Star):
                         logger.warning(f"【修仙插件】灵眼广播发送失败 (群{group_id}): {e}")
         except Exception as e:
             logger.error(f"【修仙插件】灵眼广播异常: {e}")
+
+    @filter.command(CMD_PLUGIN_UPDATE_STATUS)
+    @require_whitelist
+    async def handle_plugin_update_status(self, event: AstrMessageEvent):
+        yield event.plain_result(self.update_manager.status(event))
+
+    @filter.command(CMD_PLUGIN_UPDATE)
+    @require_whitelist
+    async def handle_plugin_update(self, event: AstrMessageEvent):
+        yield event.plain_result(self.update_manager.start(event))
 
     @filter.command(CMD_HELP, "显示帮助信息")
     @require_whitelist

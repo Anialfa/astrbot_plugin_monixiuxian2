@@ -15,6 +15,12 @@
         "default": [],
         "hint": "可以手动刷新商店的用户ID（字符串）。为空则不允许任何人手动刷新商店。"
       },
+      "UPDATE_ADMINS": {
+        "description": "修仙更新管理员名单",
+        "type": "list",
+        "default": [],
+        "hint": "可执行修仙更新及查询状态的用户ID。AstrBot管理员始终有权限；为空时仅AstrBot管理员可用。Boss和商店管理员不会自动获得更新权限。"
+      },
       "BOSS_ADMINS": {
         "description": "Boss管理员名单",
         "type": "list",
