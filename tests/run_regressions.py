@@ -11,6 +11,7 @@ import tempfile
 def main():
     root = Path(__file__).resolve().parents[1]
     checks = [
+        ("test_backup_storage.py", "BACKUP_RESULTS=", False),
         ("test_update_config.py", "UPDATE_RESULTS=", False),
         ("test_native_update.py", "NATIVE_UPDATE_RESULTS=", False),
         ("test_database_fix.py", "TEST_RESULTS=", True),

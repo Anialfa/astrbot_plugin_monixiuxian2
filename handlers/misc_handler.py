@@ -14,7 +14,7 @@ class MiscHandler:
     async def handle_help(self, event: AstrMessageEvent):
         """显示帮助信息"""
         help_text = (
-            "📖 修仙指令大全 v3.1.6\n"
+            "📖 修仙指令大全 v3.1.7\n"
             "━━━━━━━━━━━━━━━\n"
             "\n"
             "📖【入门 & 基础】\n"
@@ -152,8 +152,8 @@ class MiscHandler:
             "\n"
             "【管理员维护】\n"
             "  生成Boss → 仅Boss管理员\n"
-            "  修仙更新 → 备份后更新本fork并重载\n"
-            "  修仙更新状态 → 查看版本及最近更新结果\n"
+            "  修仙更新 → 备份后更新本fork并重载（已配置R2时先上传校验）\n"
+            "  修仙更新状态 → 查看版本、更新结果及R2备份路径\n"
             "    更新仅限AstrBot管理员或修仙更新管理员\n"
             "\n"
             "━━━━━━━━━━━━━━━\n"

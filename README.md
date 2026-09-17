@@ -4,7 +4,7 @@
   <img src="logo.png" alt="模拟修仙" width="200">
 </p>
 
-> **版本:** v3.1.6<br>
+> **版本:** v3.1.7<br>
 > **许可证:** AGPL-3.0  
 > **作者:** xiaojuwa  
 > **Fork 维护:** [wearshoes/astrbot_plugin_monixiuxian2](https://github.com/wearshoes/astrbot_plugin_monixiuxian2)<br>
@@ -18,6 +18,13 @@
 ---
 
 ## 🌟 特色功能
+
+### v3.1.7 R2 更新备份（2026-09-17）
+
+- 可在更新前将代码、配置和 SQLite 一致性快照打包上传至 Cloudflare R2；配置启用后，上传失败或校验失败会取消更新并重新启用原插件。
+- 仅新增 `xiuxian/年/月/日/xiuxian_日期_时间_随机编号.tar.gz`，时间为北京时间；使用条件写入防止覆盖，不删除任何远端文件。
+- 上传后读取远端对象，校验完整内容的 SHA-256 和大小。`修仙更新状态` 展示已校验备份的路径。
+- R2 凭据单独保存在插件数据目录，不进入代码仓库或备份包。未配置 R2 时保持本地备份流程；数据库仍为 v20。
 
 ### v3.1.6 更新缓存修复（2026-09-17）
 
@@ -122,6 +129,26 @@
 更新权限在控制台本插件配置的“访问控制 → 修仙更新管理员名单”中设置，填平台用户 ID（QQ 平台为 QQ 号）。名单为空时仍允许 AstrBot 管理员。群管理员身份本身不授予更新权限。群聊仍遵守插件白名单。
 
 命令更新备份位于插件数据目录的 `backups/update-*`，包含代码、覆盖配置、控制台插件配置、SQLite 一致性快照和清单；备份不自动删除，请按需要保留和清理。`update_status.json` 保存命令更新状态；网页更新不会生成这份命令更新记录或备份。更新期间修仙玩法短暂停用，其他插件继续运行，无需重启 AstrBot。
+
+#### Cloudflare R2 备份
+
+在 `data/plugin_data/astrbot_plugin_monixiuxian2/backup_r2.json` 配置下列字段，并将文件权限设为仅服务用户可读写（Linux 为 `600`）。此文件放在插件代码目录之外，更新时保留；不要把真实凭据放进 Git 或控制台插件配置。
+
+```json
+{
+  "enabled": true,
+  "endpoint_url": "https://<account-id>.r2.cloudflarestorage.com",
+  "bucket": "<bucket-name>",
+  "access_key_id": "<access-key-id>",
+  "secret_access_key": "<secret-access-key>"
+}
+```
+
+凭据需有目标桶对象读写权限。插件固定写入 `xiuxian/` 前缀，例如 `xiuxian/2026/09/17/xiuxian_20260917_203000_<随机编号>.tar.gz`，不会列出、覆盖或清理其他备份。每次 `修仙更新` 先生成本地快照，再上传并读回校验成功，最后更新代码；失败时保留本地备份并取消本次更新。使用 `修仙更新状态` 查看最近一次结果和 R2 路径。单个压缩包上限为 5 GiB；不会自动清理本地或云端备份。
+
+压缩包包含 `plugin/`、`database.db`、`plugin-settings.json`、`manifest.json` 和可选的 `config/`，不含 `backup_r2.json`。恢复时先停止插件，再按需恢复代码、插件配置及数据库；数据库位于插件数据目录且文件名以控制台 `FILES.DATABASE_FILE` 为准。R2 凭据需另行配置。
+
+文件不存在或设置 `enabled: false` 时仅做本地备份；配置无效时会取消更新。本功能随更新命令触发，不是每日定时备份，AstrBot 网页更新也不会触发它。
 
 ### 🧘 修炼突破
 | 指令 | 说明 |

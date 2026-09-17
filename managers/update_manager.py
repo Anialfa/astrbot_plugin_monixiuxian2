@@ -13,6 +13,8 @@ from uuid import uuid4
 
 from astrbot.api import logger, sp
 
+from .backup_storage import BackupUploadError, load_r2_config, upload_backup
+
 
 PLUGIN_NAME = "astrbot_plugin_monixiuxian2"
 UPDATE_REPO = "https://github.com/wearshoes/astrbot_plugin_monixiuxian2"
@@ -77,11 +79,16 @@ class UpdateManager:
             return f"修仙插件版本：{version}\n更新记录读取失败，请检查服务日志。"
         running = getattr(self.context, TASK_ATTRIBUTE, None)
         state = record.get("state", "未知")
-        if state in ("准备中", "备份中", "更新中", "检查中") and (running is None or running.done()):
+        if state in ("准备中", "备份中", "上传备份中", "更新中", "检查中") and (running is None or running.done()):
             state = "上次更新中断，请检查控制台和备份"
         lines = [f"修仙插件版本：{version}", f"最近更新：{state}"]
         if record.get("backup"):
             lines.append("备份编号：" + Path(record["backup"]).name)
+        if record.get("r2_backup"):
+            remote = record["r2_backup"]
+            lines.append(f"R2 备份（已校验）：s3://{remote['bucket']}/{remote['key']}")
+        elif record.get("r2_state"):
+            lines.append("R2 备份：" + record["r2_state"])
         return "\n".join(lines)
 
     def _record(self, state, **fields):
@@ -183,6 +190,7 @@ class UpdateManager:
                 raise ValueError("请先在控制台将修仙插件的安装源绑定到本 fork 仓库。")
             if self.context.get_registered_star(PLUGIN_NAME) is None:
                 raise RuntimeError("修仙插件未注册")
+            r2_config = load_r2_config(self.data_dir)
             setattr(self.context, MAINTENANCE_ATTRIBUTE, True)
             await asyncio.wait_for(self._wait_idle(), timeout=30)
             paused = True
@@ -191,6 +199,14 @@ class UpdateManager:
             await self.plugin.terminate()
             self._record("备份中", backup=str(backup))
             database_version = await asyncio.to_thread(self._backup, backup)
+            if r2_config is not None:
+                self._record("上传备份中", r2_state="上传并校验中")
+                try:
+                    remote = await asyncio.to_thread(upload_backup, backup, r2_config, self.record["started_at"])
+                except BackupUploadError:
+                    self._record("上传备份中", r2_state="失败，已取消更新，本地备份保留")
+                    raise
+                self._record("上传备份中", r2_state="已校验", r2_backup=remote)
             self._record("更新中")
             replaced = True
             await manager.update_plugin(PLUGIN_NAME, repo_url=UPDATE_REPO)
@@ -208,10 +224,12 @@ class UpdateManager:
             await asyncio.to_thread(self._database_check)
             self._record("成功", version=current.version, help_header=header)
             message = f"修仙插件更新成功，当前版本：{current.version}。配置和玩家数据已保留。"
+            if r2_config is not None:
+                message += "R2 备份已上传并校验，可用修仙更新状态查看路径。"
         except Exception as exc:
             logger.exception("修仙插件更新失败")
             state = "失败，未替换代码"
-            message = f"修仙更新失败：{exc}" if not paused else "修仙更新失败。"
+            message = f"修仙更新失败：{exc}" if not paused or isinstance(exc, BackupUploadError) else "修仙更新失败。"
             if paused:
                 try:
                     await self._recover(manager, backup, database_version, replaced)

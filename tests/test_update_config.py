@@ -142,6 +142,8 @@ async def main(root):
         async def update_plugin(self, name, repo_url):
             assert name == update.PLUGIN_NAME and repo_url == update.UPDATE_REPO
             self.calls.append("update")
+            if self.mode == "r2_success":
+                assert self.calls.index("r2-verified") < self.calls.index("update")
             assert self.current.activated, "Disabled reload would retain cached modules"
             self.plugin.terminate.assert_awaited()
             assert getattr(self.context, update.MAINTENANCE_ATTRIBUTE)
@@ -173,7 +175,7 @@ async def main(root):
             return True, None
 
     source = {update.PLUGIN_NAME: {"install_method": "repository", "repo": update.UPDATE_REPO}}
-    for mode in ("success", "failed", "disappeared", "schema_changed", "backup_failed", "wrong_source", "stale_class", "stale_help"):
+    for mode in ("success", "failed", "disappeared", "schema_changed", "backup_failed", "wrong_source", "stale_class", "stale_help", "r2_success", "r2_failed", "r2_invalid"):
         with tempfile.TemporaryDirectory(prefix="xiuxian-update-") as directory:
             manager = Manager(Path(directory), mode)
             updater = update.UpdateManager(manager.plugin, manager.plugin_dir, manager.data_dir)
@@ -186,7 +188,19 @@ async def main(root):
             record("only_astrbot_or_explicit_update_admins")
             event = Event("updater")
             chosen_source = {} if mode == "wrong_source" else source
-            with patch.object(update.sp, "global_get", new=AsyncMock(return_value=chosen_source)):
+            if mode.startswith("r2_"):
+                config = {"endpoint_url": "https://example.r2.cloudflarestorage.com", "bucket": "test-bucket",
+                          "access_key_id": "test-key", "secret_access_key": "test-secret"}
+                (manager.data_dir / "backup_r2.json").write_text("invalid" if mode == "r2_invalid" else json.dumps(config))
+            def upload(directory, config, started_at):
+                assert (directory / "database.db").exists()
+                assert "update" not in manager.calls
+                assert manager.plugin.terminate.await_count == 1
+                if mode == "r2_failed":
+                    raise update.BackupUploadError("R2 upload failed")
+                manager.calls.append("r2-verified")
+                return {"bucket": "test-bucket", "key": "xiuxian/2026/09/17/test.tar.gz", "verified": True}
+            with patch.object(update.sp, "global_get", new=AsyncMock(return_value=chosen_source)), patch.object(update, "upload_backup", side_effect=upload):
                 if mode == "backup_failed":
                     updater._backup = lambda _: (_ for _ in ()).throw(OSError("disk full"))
                 assert "开始更新" in updater.start(event)
@@ -199,24 +213,31 @@ async def main(root):
             with sqlite3.connect(manager.db_path) as conn:
                 assert conn.execute("SELECT gold FROM players").fetchone()[0] == 12345
             assert (manager.data_dir / "config/custom.json").read_text() == '{"value": 91}'
-            if mode == "success":
+            if mode in ("success", "r2_success"):
                 assert status["state"] == "成功" and manager.current.activated
                 backup = Path(status["backup"])
                 assert (backup / "plugin/code.py").read_text() == "original\n"
                 assert (backup / "config/custom.json").exists()
                 with sqlite3.connect(backup / "database.db") as conn:
                     assert conn.execute("SELECT gold FROM players").fetchone()[0] == 12345
+                if mode == "r2_success":
+                    assert status["r2_backup"]["verified"]
+                    assert "s3://test-bucket/xiuxian/" in updater.status(event)
+                    assert not (backup / "backup_r2.json").exists()
             elif mode == "schema_changed":
                 assert status["state"] == "失败，需要人工恢复" and not manager.current.activated
                 with sqlite3.connect(manager.db_path) as conn:
                     assert conn.execute("SELECT version FROM db_info").fetchone()[0] == 21
-            elif mode == "wrong_source":
+            elif mode in ("wrong_source", "r2_invalid"):
                 assert not manager.calls and status["state"] == "失败，未替换代码"
             else:
                 assert manager.current.activated and (manager.plugin_dir / "code.py").read_text() == "original\n"
                 assert status["state"].startswith("失败，已")
-                if mode == "backup_failed":
+                if mode in ("backup_failed", "r2_failed"):
                     assert "update" not in manager.calls
+                if mode == "r2_failed":
+                    assert status["r2_state"].startswith("失败")
+                    assert (Path(status["backup"]) / "database.db").exists()
                 if mode == "disappeared":
                     assert "load-only-this-plugin" in manager.calls
             record("update_" + mode)

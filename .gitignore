@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .env
 .env.*
+backup_r2.json
 *.db
 *.db-wal
 *.db-shm
