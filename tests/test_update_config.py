@@ -74,6 +74,7 @@ async def main(root):
 
         routes = json.loads((base / "config/adventure_config.json").read_text(encoding="utf-8"))
         routes["routes"][0]["duration"] = 7654
+        routes["routes"][0]["bounty_tag"] = "test_override_route"
         (data / "config/adventure_config.json").write_text(json.dumps(routes), encoding="utf-8")
         templates = json.loads((base / "config/bounty_templates.json").read_text(encoding="utf-8"))
         templates["templates"][0]["min_target"] = 987

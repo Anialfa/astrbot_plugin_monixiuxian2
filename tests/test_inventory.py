@@ -97,6 +97,7 @@ async def main(root):
                                       int(time.time()) - 1, {"route_key": route["key"]})
             event = {"desc": "audit", "item_chance": 100, "drop_tier": "audit"}
             with patch.object(adventure, "_trigger_route_event", return_value=event), \
+                 patch.object(adventure, "_trigger_special_events", return_value=[]), \
                  patch.object(adventure, "_calculate_rewards", return_value={"exp": 120, "gold": 50}), \
                  patch.object(adventure_module.random, "randint", side_effect=[1, 1, 3]):
                 ok, msg, reward = await adventure.finish_adventure(p.user_id)
