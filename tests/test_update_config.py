@@ -117,9 +117,16 @@ async def main(root):
                 conn.execute("INSERT INTO db_info VALUES(20)")
                 conn.execute("CREATE TABLE players(id TEXT, gold INTEGER)")
                 conn.execute("INSERT INTO players VALUES('existing',12345)")
-            self.plugin = SimpleNamespace(context=self.context, _active_handlers=0,
+            self.plugin = type("OriginalPlugin", (SimpleNamespace,), {})(context=self.context, _active_handlers=0,
                 config={"ACCESS_CONTROL": {"UPDATE_ADMINS": ["updater"], "BOSS_ADMINS": ["boss"], "SHOP_MANAGERS": ["shop"]}},
-                db=SimpleNamespace(db_path=self.db_path))
+                db=SimpleNamespace(db_path=self.db_path), terminate=AsyncMock())
+            self.current.star_cls = self.plugin
+
+        def instance(self, version):
+            async def help_response(event):
+                yield event.plain_result("修仙指令大全 " + version)
+            return type("ReloadedPlugin", (SimpleNamespace,), {})(terminate=AsyncMock(),
+                misc_handler=SimpleNamespace(handle_help=help_response))
 
         async def turn_off_plugin(self, name):
             assert name == update.PLUGIN_NAME
@@ -130,12 +137,14 @@ async def main(root):
             assert name == update.PLUGIN_NAME
             self.calls.append("on")
             self.current.activated = True
-            self.current.star_cls = object()
+            self.current.star_cls = self.instance(self.current.version)
 
         async def update_plugin(self, name, repo_url):
             assert name == update.PLUGIN_NAME and repo_url == update.UPDATE_REPO
             self.calls.append("update")
-            assert not self.current.activated
+            assert self.current.activated, "Disabled reload would retain cached modules"
+            self.plugin.terminate.assert_awaited()
+            assert getattr(self.context, update.MAINTENANCE_ATTRIBUTE)
             (self.plugin_dir / "code.py").write_text("new\n")
             if self.mode == "failed":
                 raise OSError("download or extraction failed")
@@ -147,21 +156,24 @@ async def main(root):
                 self.current = None
                 return
             self.current.version = "new"
+            if self.mode != "stale_class":
+                self.current.star_cls = self.instance("old" if self.mode == "stale_help" else "new")
 
         async def reload(self, name):
             assert self.current is not None, "Never reload(name) when missing: AstrBot reloads everything"
             self.calls.append("reload")
             self.current.version = "old"
+            self.current.star_cls = self.instance("old")
             return True, None
 
         async def load(self, *, specified_dir_name):
             assert specified_dir_name == update.PLUGIN_NAME
             self.calls.append("load-only-this-plugin")
-            self.current = SimpleNamespace(activated=False, version="old", star_cls=object())
+            self.current = SimpleNamespace(activated=True, version="old", star_cls=self.instance("old"))
             return True, None
 
     source = {update.PLUGIN_NAME: {"install_method": "repository", "repo": update.UPDATE_REPO}}
-    for mode in ("success", "failed", "disappeared", "schema_changed", "backup_failed", "wrong_source"):
+    for mode in ("success", "failed", "disappeared", "schema_changed", "backup_failed", "wrong_source", "stale_class", "stale_help"):
         with tempfile.TemporaryDirectory(prefix="xiuxian-update-") as directory:
             manager = Manager(Path(directory), mode)
             updater = update.UpdateManager(manager.plugin, manager.plugin_dir, manager.data_dir)

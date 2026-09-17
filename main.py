@@ -294,6 +294,8 @@ class XiuXianPlugin(Star):
         
         # 确保系统配置表存在
         await self.db.ext.ensure_system_config_table()
+        header = await self.update_manager.help_header(self)
+        logger.info(f"【修仙插件】运行时帮助：{header}")
         
         # 启动定时任务
         self.boss_task = asyncio.create_task(self._schedule_boss_spawn())

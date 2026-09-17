@@ -18,6 +18,7 @@ python tests/run_regressions.py
 | `test_inventory.py` | 商店、装备、赠予、历练、Boss、悬赏、灵田的库存守恒与事务回滚 |
 | `test_alchemy.py` | 68 张配方、丹药使用、破境消耗、ID 升序分页、并发购买与价格同步 |
 | `test_update_config.py` | 外部配置优先、更新保留配置、未覆盖默认值随版本更新、更新权限、重复触发、备份、失败恢复及数据库不回滚 |
+| `test_native_update.py` | 真实 AstrBot 管理器执行旧版到新版更新，校验类重新导入及已注册帮助命令的实际回复，更新包使用本地 ZIP，无网络或生产数据 |
 
 分项检查时传入一份可丢弃的插件副本：
 

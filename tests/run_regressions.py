@@ -12,6 +12,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     checks = [
         ("test_update_config.py", "UPDATE_RESULTS=", False),
+        ("test_native_update.py", "NATIVE_UPDATE_RESULTS=", False),
         ("test_database_fix.py", "TEST_RESULTS=", True),
         ("test_rift_rewards.py", "TEST_RESULTS=", True),
         ("test_inventory.py", "AUDIT_RESULTS=", False),

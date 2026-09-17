@@ -8,6 +8,7 @@ import shutil
 import sqlite3
 import tempfile
 import time
+from types import SimpleNamespace
 from uuid import uuid4
 
 from astrbot.api import logger, sp
@@ -91,6 +92,15 @@ class UpdateManager:
         while self.plugin._active_handlers:
             await asyncio.sleep(0.05)
 
+    @staticmethod
+    async def help_header(plugin):
+        probe = SimpleNamespace(plain_result=lambda text: text)
+        response = plugin.misc_handler.handle_help(probe)
+        try:
+            return (await anext(response)).splitlines()[0]
+        finally:
+            await response.aclose()
+
     def _database_check(self, backup=None):
         with sqlite3.connect(self.plugin.db.db_path.resolve().as_uri() + "?mode=ro", uri=True) as conn:
             conn.execute("PRAGMA query_only=ON")
@@ -128,10 +138,12 @@ class UpdateManager:
 
     async def _recover(self, manager, backup, database_version, replaced):
         current = self.context.get_registered_star(PLUGIN_NAME)
-        if current is not None and current.activated:
-            await manager.turn_off_plugin(PLUGIN_NAME)
+        if current is not None and current.activated and current.star_cls is not None:
+            await current.star_cls.terminate()
         if replaced:
             if await asyncio.to_thread(self._database_check) != database_version:
+                if current is not None and current.activated:
+                    await manager.turn_off_plugin(PLUGIN_NAME)
                 raise RuntimeError("Database schema changed; manual recovery required")
             await asyncio.to_thread(self._restore_code, backup)
         # reload(name) reloads ALL plugins if the name disappeared after a failed import.
@@ -141,8 +153,13 @@ class UpdateManager:
             ok, message = await manager.reload(PLUGIN_NAME)
         if not ok:
             raise RuntimeError(message or "Recovery load failed")
-        await manager.turn_on_plugin(PLUGIN_NAME)
         current = self.context.get_registered_star(PLUGIN_NAME)
+        if current is not None and not current.activated:
+            await manager.turn_on_plugin(PLUGIN_NAME)
+            ok, message = await manager.reload(PLUGIN_NAME)
+            if not ok:
+                raise RuntimeError(message or "Recovery reload failed")
+            current = self.context.get_registered_star(PLUGIN_NAME)
         if current is None or not current.activated or current.star_cls is None:
             raise RuntimeError("Recovery activation failed")
 
@@ -155,7 +172,7 @@ class UpdateManager:
     async def _run(self, event, manager):
         backup = self.data_dir / "backups" / (time.strftime("update-%Y%m%d-%H%M%S") + "-" + uuid4().hex[:8])
         self.record = {"started_at": int(time.time()), "repo": UPDATE_REPO}
-        disabled = replaced = False
+        paused = replaced = False
         database_version = None
         message = "修仙更新未完成，请检查控制台。"
         try:
@@ -168,8 +185,10 @@ class UpdateManager:
                 raise RuntimeError("修仙插件未注册")
             setattr(self.context, MAINTENANCE_ATTRIBUTE, True)
             await asyncio.wait_for(self._wait_idle(), timeout=30)
-            disabled = True
-            await manager.turn_off_plugin(PLUGIN_NAME)
+            paused = True
+            # AstrBot 4.27.4 only purges cached modules when reloading an active plugin.
+            # Maintenance blocks game commands while terminate() drains background work.
+            await self.plugin.terminate()
             self._record("备份中", backup=str(backup))
             database_version = await asyncio.to_thread(self._backup, backup)
             self._record("更新中")
@@ -179,18 +198,21 @@ class UpdateManager:
             if current is None:
                 raise RuntimeError("新版本导入失败")
             self._record("检查中")
-            await manager.turn_on_plugin(PLUGIN_NAME)
-            current = self.context.get_registered_star(PLUGIN_NAME)
             if current is None or not current.activated or current.star_cls is None:
                 raise RuntimeError("新版本未正常启用")
+            if type(current.star_cls) is type(self.plugin):
+                raise RuntimeError("更新后仍在使用旧的插件模块")
+            header = await self.help_header(current.star_cls)
+            if f"修仙指令大全 {current.version}" not in header:
+                raise RuntimeError("实际帮助文本与插件版本不一致")
             await asyncio.to_thread(self._database_check)
-            self._record("成功", version=current.version)
+            self._record("成功", version=current.version, help_header=header)
             message = f"修仙插件更新成功，当前版本：{current.version}。配置和玩家数据已保留。"
         except Exception as exc:
             logger.exception("修仙插件更新失败")
             state = "失败，未替换代码"
-            message = f"修仙更新失败：{exc}" if not disabled else "修仙更新失败。"
-            if disabled:
+            message = f"修仙更新失败：{exc}" if not paused else "修仙更新失败。"
+            if paused:
                 try:
                     await self._recover(manager, backup, database_version, replaced)
                     state = "失败，已恢复旧版本" if replaced else "失败，已重新启用原版本"
