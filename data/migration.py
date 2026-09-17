@@ -5,7 +5,7 @@ from typing import Dict, Callable, Awaitable
 from astrbot.api import logger
 from ..config_manager import ConfigManager
 
-LATEST_DB_VERSION = 21  # v21: 秘境可见境界与扩展秘境
+LATEST_DB_VERSION = 22  # v22: 扩展秘境奖励平衡
 
 MIGRATION_TASKS: Dict[int, Callable[[aiosqlite.Connection, ConfigManager], Awaitable[None]]] = {}
 
@@ -1002,18 +1002,18 @@ async def _migrate_to_v21(conn: aiosqlite.Connection, config_manager: ConfigMana
         )
 
     import json
-    # 所有新增秘境固定探索 30 分钟；奖励按进入境界递进，避免低阶收益倒挂。
+    # 所有新增秘境固定探索 30 分钟；奖励按进入境界、秘境危险度递进。
     expanded_rifts = [
-        (6, "七玄遗府", 2, 10, 11, {"exp": [2000, 5000], "gold": [800, 2000]}),
-        (7, "山谷秘窟", 2, 10, 11, {"exp": [2400, 5600], "gold": [1000, 2400]}),
-        (8, "星海遗迹", 2, 11, 12, {"exp": [3200, 7200], "gold": [1400, 3200]}),
-        (9, "血色禁地", 2, 10, 11, {"exp": [3800, 8400], "gold": [1800, 4000]}),
-        (10, "虚天殿外圈", 3, 12, 13, {"exp": [8000, 16000], "gold": [3600, 7200]}),
-        (11, "虚天殿内圈", 3, 13, 14, {"exp": [15000, 30000], "gold": [7000, 14000]}),
-        (12, "坠魔谷", 4, 14, 15, {"exp": [28000, 56000], "gold": [13000, 26000]}),
-        (13, "封魔之渊", 4, 15, 16, {"exp": [50000, 100000], "gold": [24000, 48000]}),
-        (14, "昆吾山封印地", 5, 16, 17, {"exp": [90000, 180000], "gold": [42000, 84000]}),
-        (15, "昆吾山镇妖塔", 5, 17, 18, {"exp": [160000, 320000], "gold": [76000, 152000]}),
+        (6, "七玄遗府", 2, 10, 11, {"exp": [6000, 14000], "gold": [2800, 7000]}),
+        (7, "山谷秘窟", 2, 10, 11, {"exp": [8000, 18000], "gold": [3600, 9000]}),
+        (8, "星海遗迹", 2, 11, 12, {"exp": [16000, 34000], "gold": [7500, 17000]}),
+        (9, "血色禁地", 2, 10, 11, {"exp": [12000, 26000], "gold": [5500, 13000]}),
+        (10, "虚天殿外圈", 3, 12, 13, {"exp": [24000, 50000], "gold": [12000, 26000]}),
+        (11, "虚天殿内圈", 3, 13, 14, {"exp": [38000, 78000], "gold": [18000, 40000]}),
+        (12, "坠魔谷", 4, 14, 15, {"exp": [60000, 120000], "gold": [30000, 64000]}),
+        (13, "封魔之渊", 4, 15, 16, {"exp": [95000, 190000], "gold": [48000, 100000]}),
+        (14, "昆吾山封印地", 5, 16, 17, {"exp": [150000, 300000], "gold": [75000, 155000]}),
+        (15, "昆吾山镇妖塔", 5, 17, 18, {"exp": [230000, 460000], "gold": [115000, 240000]}),
     ]
     for rift_id, name, rift_level, visible_level, required_level, rewards in expanded_rifts:
         await conn.execute(
@@ -1028,3 +1028,31 @@ async def _migrate_to_v21(conn: aiosqlite.Connection, config_manager: ConfigMana
 
     await conn.commit()
     logger.info("v21迁移完成：已添加10个分阶段可见的秘境")
+
+
+@migration(22)
+async def _migrate_to_v22(conn: aiosqlite.Connection, config_manager: ConfigManager):
+    """迁移到v22 - 重平衡扩展秘境的基础奖励。"""
+    logger.info("开始迁移到v22：重平衡扩展秘境奖励")
+
+    import json
+    balanced_rewards = {
+        6: {"exp": [6000, 14000], "gold": [2800, 7000]},
+        7: {"exp": [8000, 18000], "gold": [3600, 9000]},
+        8: {"exp": [16000, 34000], "gold": [7500, 17000]},
+        9: {"exp": [12000, 26000], "gold": [5500, 13000]},
+        10: {"exp": [24000, 50000], "gold": [12000, 26000]},
+        11: {"exp": [38000, 78000], "gold": [18000, 40000]},
+        12: {"exp": [60000, 120000], "gold": [30000, 64000]},
+        13: {"exp": [95000, 190000], "gold": [48000, 100000]},
+        14: {"exp": [150000, 300000], "gold": [75000, 155000]},
+        15: {"exp": [230000, 460000], "gold": [115000, 240000]},
+    }
+    for rift_id, rewards in balanced_rewards.items():
+        await conn.execute(
+            "UPDATE rifts SET rewards = ? WHERE rift_id = ?",
+            (json.dumps(rewards, ensure_ascii=False), rift_id),
+        )
+
+    await conn.commit()
+    logger.info("v22迁移完成：已重平衡10个扩展秘境奖励")

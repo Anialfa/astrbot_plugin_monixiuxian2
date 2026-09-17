@@ -45,18 +45,36 @@ class SpiritFarmHandlers:
             )
             return
         
-        parts = herb_name.strip().rsplit(maxsplit=1)
-        herb_name = parts[0]
-        quantity = 1
-        if len(parts) == 2:
+        def parse_herb_and_quantity(value: str):
+            normalized = value.strip().replace("　", " ")
+            normalized = normalized.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+            parts = normalized.rsplit(maxsplit=1)
+            if len(parts) == 2:
+                return parts[0], int(parts[1])
+            return normalized, 1
+
+        try:
+            herb_name, quantity = parse_herb_and_quantity(herb_name)
+        except ValueError:
+            yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
+            return
+
+        # AstrBot 的指令绑定可能忽略多余参数，改从原始消息补解析数量，
+        # 以确保“种植 灵草 3”会一次占用三个种植格。
+        if quantity == 1:
             try:
-                quantity = int(parts[1])
-            except ValueError:
-                yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
-                return
-            if quantity <= 0:
-                yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
-                return
+                raw_message = event.get_message_str().strip().lstrip("/")
+                if raw_message.startswith("种植"):
+                    raw_message = raw_message[len("种植"):].strip()
+                raw_herb_name, raw_quantity = parse_herb_and_quantity(raw_message)
+                if raw_herb_name == herb_name:
+                    quantity = raw_quantity
+            except (AttributeError, ValueError):
+                pass
+
+        if quantity <= 0:
+            yield event.plain_result("❌ 种植数量必须是大于 0 的整数。")
+            return
         success, msg = await self.mgr.plant_herbs(player, herb_name, quantity)
         yield event.plain_result(msg)
     

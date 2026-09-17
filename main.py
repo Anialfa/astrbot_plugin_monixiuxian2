@@ -967,7 +967,12 @@ class XiuXianPlugin(Star):
         if success and reward_data:
             player = await self.db.get_player_by_id(user_id)
             if player:
-                has_progress, bounty_msg = await self.bounty_mgr.add_bounty_progress(player, "rift", 1)
+                rift_id = reward_data.get("rift_id")
+                bounty_tag = f"rift:{rift_id}" if rift_id else "rift"
+                has_progress, bounty_msg = await self.bounty_mgr.add_bounty_progress(player, bounty_tag, 1)
+                # 兼容更新前已经接取、仍使用通用 rift 标签的悬赏。
+                if not has_progress and bounty_tag != "rift":
+                    has_progress, bounty_msg = await self.bounty_mgr.add_bounty_progress(player, "rift", 1)
                 if has_progress:
                     msg += bounty_msg
         
@@ -999,6 +1004,13 @@ class XiuXianPlugin(Star):
                 bounty_tag = reward_data.get("bounty_tag", "adventure")
                 bounty_value = reward_data.get("bounty_progress", 1)
                 has_progress, bounty_msg = await self.bounty_mgr.add_bounty_progress(player, bounty_tag, bounty_value)
+                # 兼容更新前按路线大类记录的已接取悬赏。
+                if not has_progress:
+                    legacy_tag = reward_data.get("legacy_bounty_tag", "")
+                    if legacy_tag and legacy_tag != bounty_tag:
+                        has_progress, bounty_msg = await self.bounty_mgr.add_bounty_progress(
+                            player, legacy_tag, bounty_value
+                        )
                 if has_progress:
                     msg += bounty_msg
         

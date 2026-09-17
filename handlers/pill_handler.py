@@ -55,18 +55,36 @@ class PillHandler:
             )
             return
 
-        parts = pill_name.strip().rsplit(maxsplit=1)
-        pill_name = parts[0]
-        quantity = 1
-        if len(parts) == 2:
+        def parse_pill_and_quantity(value: str):
+            normalized = value.strip().replace("　", " ")
+            normalized = normalized.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+            parts = normalized.rsplit(maxsplit=1)
+            if len(parts) == 2:
+                return parts[0], int(parts[1])
+            return normalized, 1
+
+        try:
+            pill_name, quantity = parse_pill_and_quantity(pill_name)
+        except ValueError:
+            yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
+            return
+
+        # AstrBot 的指令绑定可能只传入第一个字符串参数；此时从原始消息
+        # 补解析末尾数量，确保“服用丹药 玄灵丹 3”能真实服用三颗。
+        if quantity == 1:
             try:
-                quantity = int(parts[1])
-            except ValueError:
-                yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
-                return
-            if quantity <= 0:
-                yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
-                return
+                raw_message = event.get_message_str().strip().lstrip("/")
+                if raw_message.startswith(CMD_USE_PILL):
+                    raw_message = raw_message[len(CMD_USE_PILL):].strip()
+                raw_pill_name, raw_quantity = parse_pill_and_quantity(raw_message)
+                if raw_pill_name == pill_name:
+                    quantity = raw_quantity
+            except (AttributeError, ValueError):
+                pass
+
+        if quantity <= 0:
+            yield event.plain_result("❌ 服用数量必须是大于 0 的整数。")
+            return
         success, message = await self.pill_manager.use_pills(player, pill_name, quantity)
 
         if success:

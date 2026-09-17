@@ -35,7 +35,7 @@ class BountyManager:
                 "name": "击退妖兽",
                 "difficulty": "easy",
                 "category": "巡山",
-                "progress_tags": ["adventure_scout"],
+                "progress_tags": ["adventure:scout"],
                 "min_target": 3,
                 "max_target": 5,
                 "time_limit": 3600,
@@ -77,7 +77,16 @@ class BountyManager:
         self.templates_by_diff = {}
         for tpl in config.get("templates", []):
             tpl_copy = dict(tpl)
-            tpl_copy["progress_tags"] = [str(tag).lower() for tag in tpl_copy.get("progress_tags", [])]
+            progress_tags = list(dict.fromkeys(
+                str(tag).strip().lower() for tag in tpl_copy.get("progress_tags", []) if str(tag).strip()
+            ))
+            if not 1 <= len(progress_tags) <= 2:
+                logger.warning(
+                    f"忽略悬赏模板 {tpl_copy.get('id', '未知')}："
+                    "progress_tags 必须配置 1 至 2 个精确副本标签",
+                )
+                continue
+            tpl_copy["progress_tags"] = progress_tags
             self.templates_by_id[tpl_copy["id"]] = tpl_copy
             self.templates_by_diff.setdefault(tpl_copy["difficulty"], []).append(tpl_copy)
         logger.info(f"悬赏配置加载完成：{len(self.templates_by_id)} 条模板")
@@ -101,12 +110,15 @@ class BountyManager:
                 data = json.load(f)
             for route in data.get("routes", []):
                 tag = str(route.get("bounty_tag", "")).lower()
-                if not tag:
+                route_key = str(route.get("key", "")).strip().lower()
+                if not tag or not route_key:
                     continue
-                self.adventure_tag_meta[tag] = {
+                metadata = {
                     "duration": int(route.get("duration", 3600)),
                     "fatigue": int(route.get("fatigue_cooldown", 0))
                 }
+                self.adventure_tag_meta[tag] = metadata
+                self.adventure_tag_meta[f"adventure:{route_key}"] = metadata
             logger.info("已加载冒险路线元数据用于悬赏校准")
         except Exception as exc:
             logger.warning(f"加载冒险路线配置失败，将使用默认时限: {exc}")
@@ -147,10 +159,18 @@ class BountyManager:
             plan.append("hard")
         if level_index >= 12:
             plan.append("elite")
+        if level_index >= 16:
+            plan.append("rare")
+        if level_index >= 18:
+            plan.append("legend")
         return [diff for diff in plan if diff in self.difficulties]
 
-    def _pick_template(self, difficulty: str) -> Optional[dict]:
-        templates = self.templates_by_diff.get(difficulty)
+    def _pick_template(self, difficulty: str, player_level: int) -> Optional[dict]:
+        difficulty_min_level = int(self.difficulties.get(difficulty, {}).get("min_level", 0))
+        templates = [
+            template for template in self.templates_by_diff.get(difficulty, [])
+            if player_level >= int(template.get("min_level", difficulty_min_level))
+        ]
         if not templates:
             return None
         total = sum(max(1, tpl.get("weight", 1)) for tpl in templates)
@@ -163,7 +183,7 @@ class BountyManager:
         return templates[0]
 
     def _build_bounty_entry(self, difficulty: str, player: Player) -> Optional[dict]:
-        template = self._pick_template(difficulty)
+        template = self._pick_template(difficulty, player.level_index)
         if not template:
             return None
         diff_cfg = self.difficulties.get(difficulty, {})
@@ -465,11 +485,15 @@ class BountyManager:
             except Exception:
                 rewards_data = {}
 
-            template = self.templates_by_id.get(active["bounty_id"])
-            if template:
-                allowed_tags = template.get("progress_tags", [])
-            else:
-                allowed_tags = [str(tag).lower() for tag in rewards_data.get("progress_tags", [])]
+            # 悬赏接取时会保存标签快照。优先使用快照，避免运营配置更新后将
+            # 已接取的旧悬赏卡在无法完成的状态。
+            allowed_tags = [
+                str(tag).lower() for tag in rewards_data.get("progress_tags", [])
+                if str(tag).strip()
+            ]
+            if not allowed_tags:
+                template = self.templates_by_id.get(active["bounty_id"])
+                allowed_tags = template.get("progress_tags", []) if template else []
 
             if activity_tag not in allowed_tags:
                 await self.db.conn.rollback()
