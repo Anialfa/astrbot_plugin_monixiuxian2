@@ -5,7 +5,7 @@ from typing import Dict, Callable, Awaitable
 from astrbot.api import logger
 from ..config_manager import ConfigManager
 
-LATEST_DB_VERSION = 20  # v20: 用户CD表添加额外数据字段
+LATEST_DB_VERSION = 21  # v21: 秘境可见境界与扩展秘境
 
 MIGRATION_TASKS: Dict[int, Callable[[aiosqlite.Connection, ConfigManager], Awaitable[None]]] = {}
 
@@ -987,3 +987,44 @@ async def _migrate_to_v20(conn: aiosqlite.Connection, config_manager: ConfigMana
     
     await conn.commit()
     logger.info("v20迁移完成：用户CD表添加额外数据字段")
+
+
+@migration(21)
+async def _migrate_to_v21(conn: aiosqlite.Connection, config_manager: ConfigManager):
+    """迁移到v21 - 秘境可见境界与扩展秘境。"""
+    logger.info("开始迁移到v21：扩展秘境与可见境界")
+
+    async with conn.execute("PRAGMA table_info(rifts)") as cursor:
+        columns = {row[1] for row in await cursor.fetchall()}
+    if "visible_level" not in columns:
+        await conn.execute(
+            "ALTER TABLE rifts ADD COLUMN visible_level INTEGER NOT NULL DEFAULT 0"
+        )
+
+    import json
+    # 所有新增秘境固定探索 30 分钟；奖励按进入境界递进，避免低阶收益倒挂。
+    expanded_rifts = [
+        (6, "七玄遗府", 2, 10, 11, {"exp": [2000, 5000], "gold": [800, 2000]}),
+        (7, "山谷秘窟", 2, 10, 11, {"exp": [2400, 5600], "gold": [1000, 2400]}),
+        (8, "星海遗迹", 2, 11, 12, {"exp": [3200, 7200], "gold": [1400, 3200]}),
+        (9, "血色禁地", 2, 10, 11, {"exp": [3800, 8400], "gold": [1800, 4000]}),
+        (10, "虚天殿外圈", 3, 12, 13, {"exp": [8000, 16000], "gold": [3600, 7200]}),
+        (11, "虚天殿内圈", 3, 13, 14, {"exp": [15000, 30000], "gold": [7000, 14000]}),
+        (12, "坠魔谷", 4, 14, 15, {"exp": [28000, 56000], "gold": [13000, 26000]}),
+        (13, "封魔之渊", 4, 15, 16, {"exp": [50000, 100000], "gold": [24000, 48000]}),
+        (14, "昆吾山封印地", 5, 16, 17, {"exp": [90000, 180000], "gold": [42000, 84000]}),
+        (15, "昆吾山镇妖塔", 5, 17, 18, {"exp": [160000, 320000], "gold": [76000, 152000]}),
+    ]
+    for rift_id, name, rift_level, visible_level, required_level, rewards in expanded_rifts:
+        await conn.execute(
+            """
+            INSERT OR IGNORE INTO rifts
+                (rift_id, rift_name, rift_level, required_level, visible_level, rewards)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (rift_id, name, rift_level, required_level, visible_level,
+             json.dumps(rewards, ensure_ascii=False)),
+        )
+
+    await conn.commit()
+    logger.info("v21迁移完成：已添加10个分阶段可见的秘境")

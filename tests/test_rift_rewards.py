@@ -38,6 +38,20 @@ async def main(root, expect_regression):
             await migration.MigrationManager(db.conn, None).migrate()
             storage = storage_module.StorageRingManager(db, config)
             manager = rift_module.RiftManager(db, config, storage)
+            visibility_player = models.Player(user_id="__rift_visibility", level_index=10)
+            await db.create_player(visibility_player)
+            list_success, list_message = await manager.list_rifts(visibility_player.user_id)
+            enter_success, enter_message = await manager.enter_rift(visibility_player.user_id, 8)
+            results["rift_visibility_gate"] = {
+                "passed": (
+                    list_success
+                    and "七玄遗府" in list_message
+                    and "星海遗迹" not in list_message
+                    and not enter_success
+                    and "尚不足以发现" in enter_message
+                ),
+                "failed_checks": [],
+            }
             capacity = storage.get_ring_capacity(models.Player(user_id="test").storage_ring)
             full = {"slot_" + str(i): 1 for i in range(capacity - 1)}
             full[HERB] = 2

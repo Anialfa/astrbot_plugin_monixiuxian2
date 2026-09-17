@@ -91,16 +91,19 @@ class AdventureManager:
         }
     }
 
-    def __init__(self, db: DataBase, storage_ring_manager: "StorageRingManager" = None, config_manager=None):
+    def __init__(self, db: DataBase, storage_ring_manager: "StorageRingManager" = None,
+                 config_manager=None):
         self.db = db
         if config_manager is not None:
             self.CONFIG_FILE = config_manager.config_path("adventure_config.json")
         self.storage_ring_manager = storage_ring_manager
+        self.config_manager = config_manager
         self._route_cooldowns: Dict[str, Dict[str, int]] = {}
         self.routes: Dict[str, dict] = {}
         self.route_alias_index: Dict[str, str] = {}
         self.event_groups: Dict[str, List[dict]] = {}
         self.drop_tables: Dict[str, List[dict]] = {}
+        self.special_events: List[dict] = []
         self.default_route_key: str = "scout"
         self.reload_config()
 
@@ -129,6 +132,7 @@ class AdventureManager:
 
         self.event_groups = config.get("event_groups", self.DEFAULT_CONFIG["event_groups"])
         self.drop_tables = config.get("drop_tables", self.DEFAULT_CONFIG["drop_tables"])
+        self.special_events = config.get("special_events", [])
 
     def _load_config_file(self) -> dict:
         """加载配置文件并在失败时回退到默认配置"""
@@ -142,17 +146,21 @@ class AdventureManager:
                 logger.error(f"加载 adventure_config.json 失败，将使用默认配置: {exc}")
         return self.DEFAULT_CONFIG
 
-    def get_route_overview(self) -> List[dict]:
+    def get_route_overview(self, player_level: Optional[int] = None) -> List[dict]:
         """暴露给指令层的路线概览"""
         overview = []
         for route in self.routes.values():
+            if player_level is not None and player_level < route.get("visible_level", 0):
+                continue
             overview.append(
                 {
                     "key": route["key"],
                     "name": route["name"],
                     "risk": route.get("risk", "未知"),
                     "duration": route.get("duration", 0),
+                    "visible_level": route.get("visible_level", 0),
                     "min_level": route.get("min_level", 0),
+                    "required_level_name": self._get_level_name(route.get("min_level", 0)),
                     "description": route.get("description", "")
                 }
             )
@@ -179,8 +187,12 @@ class AdventureManager:
         if not route:
             return False, "❌ 未找到对应的历练路线，请先发送 /历练信息 查看可选路线。"
 
+        if player.level_index < route.get("visible_level", 0):
+            return False, "❌ 你当前境界尚不足以发现这条历练路线！"
+
         if player.level_index < route.get("min_level", 0):
-            return False, "❌ 你的境界还不足以踏上这条路线，先提升境界吧！"
+            required_name = self._get_level_name(route.get("min_level", 0))
+            return False, f"❌ 开始【{route['name']}】需要达到【{required_name}】！"
 
         cooldown_end = self._route_cooldowns.get(user_id, {}).get(route_key, 0)
         now = int(time.time())
@@ -241,8 +253,9 @@ class AdventureManager:
         scheduled_duration = max(1, user_cd.scheduled_time - user_cd.create_time)
         effective_duration = min(adventure_duration, scheduled_duration)
         event = self._trigger_route_event(route)
+        special_events = self._trigger_special_events()
 
-        rewards = self._calculate_rewards(player, route, effective_duration, event)
+        rewards = self._calculate_rewards(player, route, effective_duration, event, special_events)
         dropped_items, item_msg = await self._handle_drops(player, route, event)
 
         player.experience += rewards["exp"]
@@ -259,10 +272,14 @@ class AdventureManager:
 
         fatigue_hint = f"\n⏳ 该路线休整：{fatigue // 60} 分钟" if fatigue else ""
         display_minutes = effective_duration // 60
+        special_event_text = "".join(
+            "\n✨ 奇遇：" + special_event["desc"] for special_event in special_events
+        )
         msg = (
             f"🚶 历练归来 · {route['name']}\n"
             f"━━━━━━━━━━━━━━━\n"
-            f"{event['desc']}\n\n"
+            f"{event['desc']}"
+            f"{special_event_text}\n\n"
             f"本次历练：{display_minutes} 分钟\n"
             f"获得修为：+{rewards['exp']:,}\n"
             f"获得灵石：+{rewards['gold']:,}"
@@ -278,6 +295,7 @@ class AdventureManager:
             "route_name": route["name"],
             "event_key": event.get("key"),
             "event_desc": event["desc"],
+            "special_event_keys": [special_event.get("key") for special_event in special_events],
             "exp_reward": rewards["exp"],
             "gold_reward": rewards["gold"],
             "items": dropped_items,
@@ -333,6 +351,12 @@ class AdventureManager:
         normalized = token.strip().lower()
         return self.route_alias_index.get(normalized, self.default_route_key)
 
+    def _get_level_name(self, level_index: int) -> str:
+        """以灵修境界名称展示跨玩法的等级门槛。"""
+        if self.config_manager and 0 <= level_index < len(self.config_manager.level_data):
+            return self.config_manager.level_data[level_index].get("level_name", f"境界{level_index}")
+        return f"境界{level_index}"
+
     def _trigger_route_event(self, route: dict) -> dict:
         weights = route.get("event_weights", {})
         if not weights:
@@ -351,7 +375,15 @@ class AdventureManager:
         group = self.event_groups.get(group_key) or self.event_groups.get("standard") or self.DEFAULT_CONFIG["event_groups"]["standard"]
         return random.choice(group)
 
-    def _calculate_rewards(self, player: Player, route: dict, duration: int, event: dict) -> Dict[str, int]:
+    def _trigger_special_events(self) -> List[dict]:
+        """按配置中的独立概率触发历练奇遇，可同时触发多项。"""
+        return [
+            event for event in self.special_events
+            if random.randint(1, 100) <= max(0, min(100, event.get("chance", 0)))
+        ]
+
+    def _calculate_rewards(self, player: Player, route: dict, duration: int, event: dict,
+                           special_events: Optional[List[dict]] = None) -> Dict[str, int]:
         duration_minutes = max(1, duration // 60)
         base_exp = duration_minutes * route.get("base_exp_per_min", 40)
         base_gold = duration_minutes * route.get("base_gold_per_min", 10)
@@ -363,8 +395,10 @@ class AdventureManager:
         exp_total = base_exp + level_bonus_exp + completion_bonus.get("exp", 0)
         gold_total = base_gold + level_bonus_gold + completion_bonus.get("gold", 0)
 
-        final_exp = max(0, int(exp_total * event.get("exp_mult", 1.0)))
-        final_gold = max(0, int(gold_total * event.get("gold_mult", 1.0)))
+        bonus_exp = sum(event.get("bonus_exp", 0) for event in (special_events or []))
+        bonus_gold = sum(event.get("bonus_gold", 0) for event in (special_events or []))
+        final_exp = max(0, int(exp_total * event.get("exp_mult", 1.0)) + bonus_exp)
+        final_gold = max(0, int(gold_total * event.get("gold_mult", 1.0)) + bonus_gold)
         return {"exp": final_exp, "gold": final_gold}
 
     async def _handle_drops(self, player: Player, route: dict, event: dict) -> Tuple[List[Tuple[str, int]], str]:

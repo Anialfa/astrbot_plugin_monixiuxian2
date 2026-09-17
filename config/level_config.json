@@ -192,7 +192,7 @@
         "breakthrough_magic_defense_gain": 150
     },
     {
-        "level_name": "元婴期初期",
+        "level_name": "元婴初期",
         "exp_needed": 1200000,
         "success_rate": 0.25,
         "breakthrough_lifespan_gain": 50,
@@ -204,7 +204,7 @@
         "breakthrough_magic_defense_gain": 225
     },
     {
-        "level_name": "元婴期中期",
+        "level_name": "元婴中期",
         "exp_needed": 2000000,
         "success_rate": 0.22,
         "breakthrough_lifespan_gain": 50,
@@ -216,7 +216,7 @@
         "breakthrough_magic_defense_gain": 350
     },
     {
-        "level_name": "元婴期后期",
+        "level_name": "元婴后期",
         "exp_needed": 3500000,
         "success_rate": 0.2,
         "breakthrough_lifespan_gain": 50,
@@ -228,7 +228,7 @@
         "breakthrough_magic_defense_gain": 500
     },
     {
-        "level_name": "化神期初期",
+        "level_name": "化神初期",
         "exp_needed": 6000000,
         "success_rate": 0.18,
         "breakthrough_lifespan_gain": 50,
@@ -240,7 +240,7 @@
         "breakthrough_magic_defense_gain": 750
     },
     {
-        "level_name": "化神期中期",
+        "level_name": "化神中期",
         "exp_needed": 10000000,
         "success_rate": 0.15,
         "breakthrough_lifespan_gain": 50,
@@ -252,7 +252,7 @@
         "breakthrough_magic_defense_gain": 1250
     },
     {
-        "level_name": "化神期后期",
+        "level_name": "化神后期",
         "exp_needed": 18000000,
         "success_rate": 0.12,
         "breakthrough_lifespan_gain": 50,
@@ -264,7 +264,7 @@
         "breakthrough_magic_defense_gain": 1750
     },
     {
-        "level_name": "炼虚期初期",
+        "level_name": "炼虚初期",
         "exp_needed": 30000000,
         "success_rate": 0.1,
         "breakthrough_lifespan_gain": 50,
@@ -276,7 +276,7 @@
         "breakthrough_magic_defense_gain": 2750
     },
     {
-        "level_name": "炼虚期中期",
+        "level_name": "炼虚中期",
         "exp_needed": 50000000,
         "success_rate": 0.09,
         "breakthrough_lifespan_gain": 50,
@@ -288,7 +288,7 @@
         "breakthrough_magic_defense_gain": 4000
     },
     {
-        "level_name": "炼虚期后期",
+        "level_name": "炼虚后期",
         "exp_needed": 80000000,
         "success_rate": 0.08,
         "breakthrough_lifespan_gain": 50,
@@ -300,7 +300,7 @@
         "breakthrough_magic_defense_gain": 5500
     },
     {
-        "level_name": "合体期初期",
+        "level_name": "合体初期",
         "exp_needed": 130000000,
         "success_rate": 0.07,
         "breakthrough_lifespan_gain": 50,
@@ -312,7 +312,7 @@
         "breakthrough_magic_defense_gain": 8500
     },
     {
-        "level_name": "合体期中期",
+        "level_name": "合体中期",
         "exp_needed": 200000000,
         "success_rate": 0.06,
         "breakthrough_lifespan_gain": 50,
@@ -324,7 +324,7 @@
         "breakthrough_magic_defense_gain": 14000
     },
     {
-        "level_name": "合体期后期",
+        "level_name": "合体后期",
         "exp_needed": 350000000,
         "success_rate": 0.05,
         "breakthrough_lifespan_gain": 50,
@@ -336,7 +336,7 @@
         "breakthrough_magic_defense_gain": 20000
     },
     {
-        "level_name": "大乘期初期",
+        "level_name": "普通大乘",
         "exp_needed": 600000000,
         "success_rate": 0.04,
         "breakthrough_lifespan_gain": 50,
@@ -348,7 +348,7 @@
         "breakthrough_magic_defense_gain": 30000
     },
     {
-        "level_name": "大乘期中期",
+        "level_name": "强力大乘",
         "exp_needed": 1200000000,
         "success_rate": 0.03,
         "breakthrough_lifespan_gain": 50,
@@ -360,7 +360,7 @@
         "breakthrough_magic_defense_gain": 45000
     },
     {
-        "level_name": "大乘期后期",
+        "level_name": "顶尖大乘",
         "exp_needed": 3000000000,
         "success_rate": 0.02,
         "breakthrough_lifespan_gain": 50,
@@ -372,7 +372,7 @@
         "breakthrough_magic_defense_gain": 65000
     },
     {
-        "level_name": "渡劫期",
+        "level_name": "初通仙窍",
         "exp_needed": 6000000000,
         "success_rate": 0.01,
         "breakthrough_lifespan_gain": 50,
@@ -384,7 +384,7 @@
         "breakthrough_magic_defense_gain": 125000
     },
     {
-        "level_name": "地仙",
+        "level_name": "十二真仙",
         "exp_needed": 12000000000,
         "success_rate": 0.001,
         "breakthrough_lifespan_gain": 50,
@@ -396,7 +396,7 @@
         "breakthrough_magic_defense_gain": 175000
     },
     {
-        "level_name": "天仙",
+        "level_name": "二十四窍真仙",
         "exp_needed": 20000000000,
         "success_rate": 0.0005,
         "breakthrough_lifespan_gain": 50,
@@ -408,7 +408,7 @@
         "breakthrough_magic_defense_gain": 250000
     },
     {
-        "level_name": "大罗金仙",
+        "level_name": "金仙初境",
         "exp_needed": 35000000000,
         "success_rate": 0.0002,
         "breakthrough_lifespan_gain": 50,
@@ -420,7 +420,7 @@
         "breakthrough_magic_defense_gain": 350000
     },
     {
-        "level_name": "混元大罗金仙",
+        "level_name": "金仙中境",
         "exp_needed": 60000000000,
         "success_rate": 0.0001,
         "breakthrough_lifespan_gain": 50,
@@ -430,5 +430,101 @@
         "breakthrough_magic_damage_gain": 1300000,
         "breakthrough_physical_defense_gain": 650000,
         "breakthrough_magic_defense_gain": 650000
+    },
+    {
+        "level_name": "金仙后境",
+        "exp_needed": 100000000000,
+        "success_rate": 0.00008,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 9000000,
+        "breakthrough_mental_power_gain": 9000000,
+        "breakthrough_physical_damage_gain": 1800000,
+        "breakthrough_magic_damage_gain": 1800000,
+        "breakthrough_physical_defense_gain": 900000,
+        "breakthrough_magic_defense_gain": 900000
+    },
+    {
+        "level_name": "太乙初境",
+        "exp_needed": 160000000000,
+        "success_rate": 0.00006,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 12000000,
+        "breakthrough_mental_power_gain": 12000000,
+        "breakthrough_physical_damage_gain": 2400000,
+        "breakthrough_magic_damage_gain": 2400000,
+        "breakthrough_physical_defense_gain": 1200000,
+        "breakthrough_magic_defense_gain": 1200000
+    },
+    {
+        "level_name": "太乙中境",
+        "exp_needed": 250000000000,
+        "success_rate": 0.00004,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 17000000,
+        "breakthrough_mental_power_gain": 17000000,
+        "breakthrough_physical_damage_gain": 3400000,
+        "breakthrough_magic_damage_gain": 3400000,
+        "breakthrough_physical_defense_gain": 1700000,
+        "breakthrough_magic_defense_gain": 1700000
+    },
+    {
+        "level_name": "太乙大圆满",
+        "exp_needed": 400000000000,
+        "success_rate": 0.00003,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 24000000,
+        "breakthrough_mental_power_gain": 24000000,
+        "breakthrough_physical_damage_gain": 4800000,
+        "breakthrough_magic_damage_gain": 4800000,
+        "breakthrough_physical_defense_gain": 2400000,
+        "breakthrough_magic_defense_gain": 2400000
+    },
+    {
+        "level_name": "大罗初境",
+        "exp_needed": 650000000000,
+        "success_rate": 0.00002,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 34000000,
+        "breakthrough_mental_power_gain": 34000000,
+        "breakthrough_physical_damage_gain": 6800000,
+        "breakthrough_magic_damage_gain": 6800000,
+        "breakthrough_physical_defense_gain": 3400000,
+        "breakthrough_magic_defense_gain": 3400000
+    },
+    {
+        "level_name": "大罗中境",
+        "exp_needed": 1000000000000,
+        "success_rate": 0.00001,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 48000000,
+        "breakthrough_mental_power_gain": 48000000,
+        "breakthrough_physical_damage_gain": 9600000,
+        "breakthrough_magic_damage_gain": 9600000,
+        "breakthrough_physical_defense_gain": 4800000,
+        "breakthrough_magic_defense_gain": 4800000
+    },
+    {
+        "level_name": "大罗大圆满",
+        "exp_needed": 1600000000000,
+        "success_rate": 0.000005,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 68000000,
+        "breakthrough_mental_power_gain": 68000000,
+        "breakthrough_physical_damage_gain": 13600000,
+        "breakthrough_magic_damage_gain": 13600000,
+        "breakthrough_physical_defense_gain": 6800000,
+        "breakthrough_magic_defense_gain": 6800000
+    },
+    {
+        "level_name": "道祖境",
+        "exp_needed": 2500000000000,
+        "success_rate": 0.000001,
+        "breakthrough_lifespan_gain": 50,
+        "breakthrough_spiritual_qi_gain": 95000000,
+        "breakthrough_mental_power_gain": 95000000,
+        "breakthrough_physical_damage_gain": 19000000,
+        "breakthrough_magic_damage_gain": 19000000,
+        "breakthrough_physical_defense_gain": 9500000,
+        "breakthrough_magic_defense_gain": 9500000
     }
 ]

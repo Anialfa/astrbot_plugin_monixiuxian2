@@ -111,6 +111,7 @@ class Rift:
     rift_name: str  # 秘境名称
     rift_level: int  # 秘境等级
     required_level: int # 需求境界
+    visible_level: int = 0  # 可见境界
     rewards: str = "{}"  # 奖励配置（JSON字符串）
     
     def get_rewards(self) -> dict:

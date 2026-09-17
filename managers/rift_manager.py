@@ -42,6 +42,20 @@ class RiftManager:
             {"name": "功法残页", "weight": 20, "min": 1, "max": 2},
             {"name": "天材地宝", "weight": 15, "min": 1, "max": 1},
         ],
+        4: [  # 元婴秘境
+            {"name": "秘境精华", "weight": 30, "min": 2, "max": 4},
+            {"name": "星辰石", "weight": 25, "min": 2, "max": 4},
+            {"name": "灵兽内丹", "weight": 20, "min": 1, "max": 2},
+            {"name": "功法残页", "weight": 15, "min": 1, "max": 2},
+            {"name": "天材地宝", "weight": 10, "min": 1, "max": 2},
+        ],
+        5: [  # 高阶元婴秘境
+            {"name": "秘境精华", "weight": 25, "min": 3, "max": 6},
+            {"name": "星辰石", "weight": 25, "min": 3, "max": 5},
+            {"name": "灵兽内丹", "weight": 20, "min": 2, "max": 3},
+            {"name": "功法残页", "weight": 15, "min": 2, "max": 3},
+            {"name": "天材地宝", "weight": 15, "min": 1, "max": 3},
+        ],
     }
     
     # 秘境稀有丹药掉落表（按秘境等级分组，低概率掉落通用增益丹）
@@ -60,6 +74,16 @@ class RiftManager:
             {"name": "六品破境增益丹", "weight": 20, "min": 1, "max": 1},
             {"name": "七品化神增益丹", "weight": 10, "min": 1, "max": 1},
         ],
+        4: [  # 元婴秘境
+            {"name": "五品渡劫增益丹", "weight": 40, "min": 1, "max": 1},
+            {"name": "六品破境增益丹", "weight": 35, "min": 1, "max": 1},
+            {"name": "七品化神增益丹", "weight": 25, "min": 1, "max": 1},
+        ],
+        5: [  # 高阶元婴秘境
+            {"name": "六品破境增益丹", "weight": 45, "min": 1, "max": 1},
+            {"name": "七品化神增益丹", "weight": 35, "min": 1, "max": 1},
+            {"name": "五品渡劫增益丹", "weight": 20, "min": 1, "max": 1},
+        ],
     }
     
     # 秘境丹药掉落概率（百分比）
@@ -67,6 +91,8 @@ class RiftManager:
         1: 3,   # 低级秘境 3%
         2: 5,   # 中级秘境 5%
         3: 10,  # 高级秘境 10%
+        4: 12,
+        5: 15,
     }
     
     def __init__(self, db: DataBase, config_manager=None, storage_ring_manager: "StorageRingManager" = None):
@@ -74,7 +100,8 @@ class RiftManager:
         self.config_manager = config_manager
         self.storage_ring_manager = storage_ring_manager
         self.config = config_manager.rift_config if config_manager else {}
-        self.explore_duration = self.config.get("default_duration", self.DEFAULT_DURATION)
+        # 扩展规则要求所有秘境统一探索 30 分钟，不受旧自定义时长影响。
+        self.explore_duration = self.DEFAULT_DURATION
     
     def _get_level_name(self, level_index: int) -> str:
         """获取境界名称"""
@@ -89,14 +116,19 @@ class RiftManager:
             return level_names[level_index]
         return f"境界{level_index}"
     
-    async def list_rifts(self) -> Tuple[bool, str]:
+    async def list_rifts(self, user_id: str) -> Tuple[bool, str]:
         """
         列出所有秘境
         
         Returns:
             (成功标志, 消息)
         """
+        player = await self.db.get_player_by_id(user_id)
+        if not player:
+            return False, "❌ 你还未踏入修仙之路！"
+
         rifts = await self.db.ext.get_all_rifts()
+        rifts = [rift for rift in rifts if player.level_index >= rift.visible_level]
         
         if not rifts:
             return False, "❌ 当前没有开放的秘境！"
@@ -156,12 +188,16 @@ class RiftManager:
         if not rift:
             return False, "❌ 秘境不存在！使用 /秘境列表 查看可用秘境"
         
-        # 4. 检查境界要求
+        # 4. 不可见秘境不能通过手动输入 ID 绕过
+        if player.level_index < rift.visible_level:
+            return False, "❌ 你当前境界尚不足以发现这处秘境！"
+
+        # 5. 检查境界要求
         if player.level_index < rift.required_level:
             level_name = self._get_level_name(rift.required_level)
             return False, f"❌ 探索【{rift.rift_name}】需要达到【{level_name}】！"
         
-        # 5. 设置探索状态，存储秘境ID
+        # 6. 设置探索状态，存储秘境ID
         scheduled_time = int(time.time()) + self.explore_duration
         extra_data = {"rift_id": rift_id, "rift_level": rift.rift_level}
         await self.db.ext.set_user_busy(user_id, UserStatus.EXPLORING, scheduled_time, extra_data)
