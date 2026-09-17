@@ -272,10 +272,10 @@ class DatabaseExtended:
         await self.conn.execute(
             """
             INSERT INTO rifts (
-                rift_name, rift_level, required_level, rewards
-            ) VALUES (?, ?, ?, ?)
+                rift_name, rift_level, required_level, visible_level, rewards
+            ) VALUES (?, ?, ?, ?, ?)
             """,
-            (rift.rift_name, rift.rift_level, rift.required_level, rift.rewards)
+            (rift.rift_name, rift.rift_level, rift.required_level, rift.visible_level, rift.rewards)
         )
         await self.conn.commit()
         
