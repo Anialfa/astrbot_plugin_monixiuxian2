@@ -1,12 +1,13 @@
 # managers/alchemy_manager.py
 """
-炼丹系统管理器 - 处理炼丹、配方等逻辑（简化版）
+炼丹系统管理器 - 处理炼丹与分境界配方
 """
 
 import random
 from typing import Tuple, List, Dict, Optional, TYPE_CHECKING
 from ..data.data_manager import DataBase
 from ..models import Player
+from ..data.transaction import atomic_operation
 from ..models_extended import UserStatus
 
 if TYPE_CHECKING:
@@ -51,7 +52,9 @@ class AlchemyManager:
             "level_required": recipe.get("level_required", recipe.get("level", 0)),
             "materials": recipe.get("materials", recipe.get("cost", {})),
             "success_rate": recipe.get("success_rate", recipe.get("success", 50)),
-            "desc": desc
+            "desc": desc,
+            "category": recipe.get("category", "修为"),
+            "cultivation_type": recipe.get("cultivation_type", "")
         }
     
     def _generate_pill_desc(self, pill_config: Dict) -> str:
@@ -110,7 +113,22 @@ class AlchemyManager:
         
         return None
     
-    async def get_available_recipes(self, user_id: str) -> Tuple[bool, str]:
+    def _success_rate(self, player: Player, recipe: Dict) -> int:
+        return min(95, recipe["success_rate"] + max(0, player.level_index - recipe["level_required"]) * 2)
+
+    def _level_name(self, level: int, player: Player) -> str:
+        levels = self.config_manager.get_level_data(player.cultivation_type) if self.config_manager else []
+        return levels[level]["level_name"] if 0 <= level < len(levels) else f"境界{level}"
+
+    def _recipe_effect(self, recipe: Dict, player: Player) -> str:
+        pill = self._get_pill_config_by_name(recipe["name"]) or {}
+        if pill.get("subtype") == "breakthrough":
+            target = self._level_name(pill.get("target_level_index", -1), player)
+            return (f"突破至{target}，成功率+{pill.get('breakthrough_bonus', 0):.2%}，"
+                    f"上限{pill.get('max_success_rate', 1):.2%}")
+        return recipe["desc"]
+
+    async def get_available_recipes(self, user_id: str, page: int = 1, category: str = "全部") -> Tuple[bool, str]:
         """
         获取可用的丹药配方
         
@@ -124,29 +142,47 @@ class AlchemyManager:
         if not player:
             return False, "❌ 你还未踏入修仙之路！"
         
-        available_recipes = []
-        for recipe_id, recipe in self.recipes.items():
-            if player.level_index >= recipe.get("level_required", 0):
-                available_recipes.append(recipe)
-        
-        if not available_recipes:
-            return False, "❌ 你当前境界无法炼制任何丹药！"
-        
-        msg = "🔥 丹药配方\n"
-        msg += "━━━━━━━━━━━━━━━\n\n"
-        
-        for recipe in available_recipes:
-            materials_str = ", ".join([f"{k}×{v}" for k, v in recipe["materials"].items()])
-            msg += f"【{recipe['name']}】(ID:{recipe['id']})\n"
-            msg += f"  需求境界：Lv.{recipe['level_required']}\n"
-            msg += f"  材料：{materials_str}\n"
-            msg += f"  成功率：{recipe['success_rate']}%\n"
-            msg += f"  效果：{recipe['desc']}\n\n"
-        
-        msg += "使用 /炼丹 <丹药ID> 开始炼制"
-        
-        return True, msg
+        category = category.strip() or "全部"
+        if category not in ("全部", "修为", "破境", "回复", "未解锁"):
+            return False, "分类不存在，可选：全部、修为、破境、回复、未解锁。"
+        if not isinstance(page, int) or page < 1:
+            return False, "页码必须为正整数。"
+        compatible = [r for r in self.recipes.values()
+                      if not r["cultivation_type"] or r["cultivation_type"] == player.cultivation_type]
+        unlocked = [r for r in compatible if player.level_index >= r["level_required"]]
+        if category == "未解锁":
+            available = sorted([r for r in compatible if player.level_index < r["level_required"]],
+                               key=lambda r: int(r["id"]))
+        else:
+            available = sorted([r for r in unlocked if category == "全部" or r["category"] == category],
+                               key=lambda r: int(r["id"]))
+        if not available:
+            return False, f"当前没有{category}配方。"
+        page_size = max(1, min(8, int(self.config.get("recipe_page_size", 5))))
+        pages = (len(available) + page_size - 1) // page_size
+        if page > pages:
+            return False, f"页码超出范围，当前分类共 {pages} 页。"
+        lines = [f"丹药配方 · {category} · {page}/{pages}页",
+                 f"当前境界：{self._level_name(player.level_index, player)}",
+                 f"已解锁 {len(unlocked)} 种 · 配方总数 {len(self.recipes)} 种"]
+        sources = self.config.get("material_sources", {})
+        for recipe in available[(page - 1) * page_size:page * page_size]:
+            level = self._level_name(recipe["level_required"], player)
+            rate = recipe["success_rate"] if category == "未解锁" else self._success_rate(player, recipe)
+            rate_label = "解锁时炼制成功率" if category == "未解锁" else "当前炼制成功率"
+            materials = "、".join(f"{name}×{count:,}" for name, count in recipe["materials"].items())
+            origins = "；".join(f"{name}：{sources.get(name, '暂无来源信息')}"
+                                for name in recipe["materials"] if name != "灵石")
+            restriction = " · 体修专用" if recipe["cultivation_type"] == "体修" else ""
+            lines.extend([f"\n【{recipe['name']}】ID:{recipe['id']} · {recipe['category']}{restriction}",
+                          f"需求境界：{level} | {rate_label}：{rate}%", f"材料：{materials}",
+                          f"效果：{self._recipe_effect(recipe, player)}", f"来源：{origins}"])
+        if page < pages:
+            lines.append(f"\n下一页：丹药配方 {page + 1} {category}")
+        lines.append("炼制：炼丹 <ID> | 分类：丹药配方 1 修为/破境/回复/未解锁")
+        return True, "\n".join(lines)
     
+    @atomic_operation
     async def craft_pill(
         self,
         user_id: str,
@@ -178,10 +214,14 @@ class AlchemyManager:
             return False, "❌ 无效的丹药ID！", None
         
         recipe = self.recipes[pill_id]
+        if recipe["cultivation_type"] and recipe["cultivation_type"] != player.cultivation_type:
+            return False, f"{recipe['name']}为{recipe['cultivation_type']}专用配方。", None
+        if not self._get_pill_config_by_name(recipe["name"]):
+            return False, "丹药配置不存在，请联系管理员。", None
         
         # 3. 检查境界要求
         if player.level_index < recipe["level_required"]:
-            return False, f"❌ 炼制{recipe['name']}需要达到境界等级 {recipe['level_required']}！", None
+            return False, f"❌ 炼制{recipe['name']}需要达到{self._level_name(recipe['level_required'], player)}！", None
         
         # 4. 检查所有材料
         materials = recipe["materials"]
@@ -201,8 +241,7 @@ class AlchemyManager:
                 if current_count < required_count:
                     missing_materials.append(f"{material_name}（需要{required_count}，拥有{current_count}）")
         else:
-            # 没有储物戒管理器时，跳过其他材料检查（兼容旧逻辑）
-            pass
+            return False, "储物戒暂不可用，未消耗材料或灵石。", None
         
         if missing_materials:
             return False, f"❌ 材料不足！\n" + "\n".join(f"  · {m}" for m in missing_materials), None
@@ -216,15 +255,15 @@ class AlchemyManager:
             for material_name, required_count in materials.items():
                 if material_name == "灵石":
                     continue
-                success, _ = await self.storage_ring_manager.retrieve_item(player, material_name, required_count)
+                success, reason = await self.storage_ring_manager.retrieve_item(player, material_name, required_count)
                 if success:
                     consumed_materials.append(f"{material_name}×{required_count}")
+                else:
+                    await self.db.conn.rollback()
+                    return False, f"炼丹取消：{reason}，未消耗材料或灵石。", None
         
         # 6. 判断成功率
-        success_rate = recipe["success_rate"]
-        # 境界加成：每高一级境界，成功率+2%
-        level_bonus = (player.level_index - recipe["level_required"]) * 2
-        final_success_rate = min(95, success_rate + level_bonus)
+        final_success_rate = self._success_rate(player, recipe)
         
         roll = random.randint(1, 100)
         is_success = roll <= final_success_rate
@@ -246,6 +285,7 @@ class AlchemyManager:
                 cost_lines.append(f"灵石 -{required_gold}")
             cost_lines.extend(consumed_materials)
             cost_str = "、".join(cost_lines) if cost_lines else "无"
+            use_command = "突破" if recipe["category"] == "破境" else "服用丹药"
             
             msg = f"""
 🎉 炼丹成功！
@@ -257,7 +297,7 @@ class AlchemyManager:
 消耗：{cost_str}
 成功率：{final_success_rate}%
 
-💡 使用 /服用丹药 {pill_name} 可服用此丹药
+💡 使用 /{use_command} {pill_name}
 💡 使用 /丹药背包 查看所有丹药
             """.strip()
             

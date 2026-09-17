@@ -9,6 +9,7 @@ from ..core import ShopManager, EquipmentManager, PillManager, StorageRingManage
 from ..models import Player
 from ..config_manager import ConfigManager
 from .utils import player_required
+from ..data.transaction import atomic_operation
 
 __all__ = ["ShopHandler"]
 
@@ -42,6 +43,7 @@ class ShopHandler:
             for user_id in access_control.get("SHOP_MANAGERS", [])
         }
 
+    @atomic_operation
     async def _ensure_pavilion_refreshed(self, pavilion_id: str, item_getter, count: int) -> None:
         """确保阁楼已刷新"""
         last_refresh_time, current_items = await self.db.get_shop_data(pavilion_id)
@@ -93,7 +95,9 @@ class ShopHandler:
     async def _find_item_in_pavilions(self, item_name: str):
         """在所有阁楼中查找物品"""
         for pavilion_id in ["pill_pavilion", "weapon_pavilion", "treasure_pavilion"]:
-            _, items = await self.db.get_shop_data(pavilion_id)
+            refreshed_at, items = await self.db.get_shop_data(pavilion_id)
+            if items and self.shop_manager.ensure_items_have_stock(items):
+                await self.db.update_shop_data(pavilion_id, refreshed_at, items)
             if items:
                 for item in items:
                     if item['name'] == item_name and item.get('stock', 0) > 0:
@@ -101,6 +105,7 @@ class ShopHandler:
         return None, None
 
     @player_required
+    @atomic_operation
     async def handle_buy(self, player: Player, event: AstrMessageEvent, item_name: str = ""):
         """处理购买物品命令"""
         if not item_name or item_name.strip() == "":
@@ -160,7 +165,6 @@ class ShopHandler:
         item_type = target_item['type']
         result_lines = []
 
-        await self.db.conn.execute("BEGIN IMMEDIATE")
         try:
             player = await self.db.get_player_by_id(event.get_sender_id())
             if player.gold < total_price:
@@ -183,8 +187,9 @@ class ShopHandler:
                     type_name = {"weapon": "武器", "armor": "防具", "main_technique": "心法", "technique": "功法", "accessory": "饰品"}.get(item_type, "装备")
                     result_lines.append(f"成功购买{type_name}【{target_item['name']}】x{quantity}，已存入储物戒。")
                 else:
-                    result_lines.append(f"成功购买【{target_item['name']}】x{quantity}。")
-                    result_lines.append(f"⚠️ 存入储物戒失败：{msg}")
+                    await self.db.conn.rollback()
+                    yield event.plain_result(f"购买失败：{msg}，未扣除灵石或库存。")
+                    return
             elif item_type in ['pill', 'exp_pill', 'utility_pill']:
                 await self.pill_manager.add_pill_to_inventory(player, target_item['name'], count=quantity)
                 result_lines.append(f"成功购买【{target_item['name']}】x{quantity}，已添加到背包。")
@@ -200,15 +205,17 @@ class ShopHandler:
                 if success:
                     result_lines.append(f"成功购买材料【{target_item['name']}】x{quantity}，已存入储物戒。")
                 else:
-                    result_lines.append(f"成功购买材料【{target_item['name']}】x{quantity}。")
-                    result_lines.append(f"⚠️ 存入储物戒失败：{msg}")
+                    await self.db.conn.rollback()
+                    yield event.plain_result(f"购买失败：{msg}，未扣除灵石或库存。")
+                    return
             elif item_type == '功法':
                 success, msg = await self.storage_ring_manager.store_item(player, target_item['name'], quantity, external_transaction=True)
                 if success:
                     result_lines.append(f"成功购买功法【{target_item['name']}】x{quantity}，已存入储物戒。")
                 else:
-                    result_lines.append(f"成功购买功法【{target_item['name']}】x{quantity}。")
-                    result_lines.append(f"⚠️ 存入储物戒失败：{msg}")
+                    await self.db.conn.rollback()
+                    yield event.plain_result(f"购买失败：{msg}，未扣除灵石或库存。")
+                    return
             else:
                 await self.db.conn.rollback()
                 yield event.plain_result(f"未知的物品类型：{item_type}")

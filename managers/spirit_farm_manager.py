@@ -5,6 +5,7 @@ import json
 from typing import Tuple, Optional, Dict, List, TYPE_CHECKING
 from ..data import DataBase
 from ..models import Player
+from ..data.transaction import atomic_operation
 
 if TYPE_CHECKING:
     from ..core import StorageRingManager
@@ -122,8 +123,12 @@ class SpiritFarmManager:
             f"当前种植：{len(crops)}/{max_slots}"
         )
     
+    @atomic_operation
     async def harvest(self, player: Player) -> Tuple[bool, str]:
         """收获灵草"""
+        player = await self.db.get_player_by_id(player.user_id)
+        if not player:
+            return False, "玩家不存在或已被删除"
         farm = await self.get_user_farm(player.user_id)
         if not farm:
             return False, "❌ 你还没有灵田！"

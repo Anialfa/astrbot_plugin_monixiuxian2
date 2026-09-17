@@ -10,6 +10,7 @@ from typing import Tuple, Dict, Optional, List, TYPE_CHECKING
 from ..data.data_manager import DataBase
 from ..models_extended import Boss, UserStatus
 from ..models import Player
+from ..data.transaction import atomic_operation
 from .combat_manager import CombatManager, CombatStats
 
 if TYPE_CHECKING:
@@ -145,6 +146,7 @@ ATK：{atk}
         
         return True, msg, boss
     
+    @atomic_operation
     async def challenge_boss(
         self,
         user_id: str

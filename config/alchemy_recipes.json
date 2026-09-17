@@ -1,37 +1,878 @@
 [
-    {
-        "id": 1,
-        "name": "炼气丹",
-        "level_required": 0,
-        "materials": {"灵草": 2, "灵石": 50},
-        "success_rate": 85
+  {
+    "id": 1,
+    "name": "炼气丹",
+    "category": "修为",
+    "level_required": 0,
+    "materials": {
+      "灵草": 2,
+      "灵石": 25
     },
-    {
-        "id": 2,
-        "name": "聚灵丹",
-        "level_required": 0,
-        "materials": {"灵草": 3, "灵石": 100},
-        "success_rate": 80
+    "success_rate": 85
+  },
+  {
+    "id": 2,
+    "name": "聚灵丹",
+    "category": "修为",
+    "level_required": 0,
+    "materials": {
+      "灵草": 3,
+      "灵石": 48
     },
-    {
-        "id": 3,
-        "name": "凝气丹",
-        "level_required": 1,
-        "materials": {"灵草": 4, "灵石": 150},
-        "success_rate": 75
+    "success_rate": 80
+  },
+  {
+    "id": 3,
+    "name": "凝气丹",
+    "category": "修为",
+    "level_required": 1,
+    "materials": {
+      "灵草": 4,
+      "灵石": 67
     },
-    {
-        "id": 4,
-        "name": "培元丹",
-        "level_required": 3,
-        "materials": {"灵草": 5, "灵石": 250},
-        "success_rate": 70
+    "success_rate": 75
+  },
+  {
+    "id": 4,
+    "name": "培元丹",
+    "category": "修为",
+    "level_required": 3,
+    "materials": {
+      "灵草": 5,
+      "灵石": 105
     },
-    {
-        "id": 5,
-        "name": "玄灵丹",
-        "level_required": 5,
-        "materials": {"灵草": 8, "灵石": 500},
-        "success_rate": 60
-    }
+    "success_rate": 70
+  },
+  {
+    "id": 5,
+    "name": "玄灵丹",
+    "category": "修为",
+    "level_required": 5,
+    "materials": {
+      "灵草": 8,
+      "灵石": 180
+    },
+    "success_rate": 60
+  },
+  {
+    "id": 6,
+    "name": "增元丹",
+    "category": "修为",
+    "level_required": 3,
+    "materials": {
+      "灵草": 3,
+      "灵石": 178
+    },
+    "success_rate": 85
+  },
+  {
+    "id": 7,
+    "name": "碧灵丹",
+    "category": "修为",
+    "level_required": 7,
+    "materials": {
+      "灵草": 5,
+      "灵石": 408
+    },
+    "success_rate": 85
+  },
+  {
+    "id": 8,
+    "name": "紫府丹",
+    "category": "修为",
+    "level_required": 10,
+    "materials": {
+      "灵草": 4,
+      "血灵草": 2,
+      "冰心草": 1,
+      "灵石": 576
+    },
+    "success_rate": 80
+  },
+  {
+    "id": 9,
+    "name": "黄龙丹",
+    "category": "修为",
+    "level_required": 10,
+    "materials": {
+      "灵草": 4,
+      "血灵草": 2,
+      "冰心草": 1,
+      "灵石": 864
+    },
+    "success_rate": 80
+  },
+  {
+    "id": 10,
+    "name": "青云丹",
+    "category": "修为",
+    "level_required": 12,
+    "materials": {
+      "灵草": 4,
+      "血灵草": 2,
+      "冰心草": 1,
+      "灵石": 1200
+    },
+    "success_rate": 80
+  },
+  {
+    "id": 11,
+    "name": "天元丹",
+    "category": "修为",
+    "level_required": 13,
+    "materials": {
+      "灵草": 4,
+      "火焰花": 1,
+      "灵兽内丹": 1,
+      "灵石": 1575
+    },
+    "success_rate": 75
+  },
+  {
+    "id": 12,
+    "name": "金阳丹",
+    "category": "修为",
+    "level_required": 13,
+    "materials": {
+      "灵草": 4,
+      "火焰花": 1,
+      "灵兽内丹": 1,
+      "灵石": 2250
+    },
+    "success_rate": 75
+  },
+  {
+    "id": 13,
+    "name": "玄冥丹",
+    "category": "修为",
+    "level_required": 15,
+    "materials": {
+      "灵草": 4,
+      "火焰花": 1,
+      "灵兽内丹": 1,
+      "灵石": 3150
+    },
+    "success_rate": 75
+  },
+  {
+    "id": 14,
+    "name": "太乙丹",
+    "category": "修为",
+    "level_required": 16,
+    "materials": {
+      "冰心草": 2,
+      "火焰花": 2,
+      "秘境精华": 1,
+      "灵石": 4320
+    },
+    "success_rate": 72
+  },
+  {
+    "id": 15,
+    "name": "九转灵丹",
+    "category": "修为",
+    "level_required": 16,
+    "materials": {
+      "冰心草": 2,
+      "火焰花": 2,
+      "秘境精华": 1,
+      "灵石": 6480
+    },
+    "success_rate": 72
+  },
+  {
+    "id": 16,
+    "name": "龙虎丹",
+    "category": "修为",
+    "level_required": 18,
+    "materials": {
+      "冰心草": 2,
+      "火焰花": 2,
+      "秘境精华": 1,
+      "灵石": 9504
+    },
+    "success_rate": 72
+  },
+  {
+    "id": 17,
+    "name": "凤凰涅槃丹",
+    "category": "修为",
+    "level_required": 19,
+    "materials": {
+      "冰心草": 3,
+      "九叶灵芝": 1,
+      "天材地宝": 1,
+      "灵石": 12600
+    },
+    "success_rate": 70
+  },
+  {
+    "id": 18,
+    "name": "麒麟圣丹",
+    "category": "修为",
+    "level_required": 22,
+    "materials": {
+      "九叶灵芝": 1,
+      "秘境精华": 2,
+      "天材地宝": 1,
+      "灵石": 24480
+    },
+    "success_rate": 68
+  },
+  {
+    "id": 19,
+    "name": "紫霄神丹",
+    "category": "修为",
+    "level_required": 22,
+    "materials": {
+      "九叶灵芝": 1,
+      "秘境精华": 2,
+      "天材地宝": 1,
+      "灵石": 32640
+    },
+    "success_rate": 68
+  },
+  {
+    "id": 20,
+    "name": "九天玄丹",
+    "category": "修为",
+    "level_required": 24,
+    "materials": {
+      "九叶灵芝": 1,
+      "秘境精华": 2,
+      "天材地宝": 1,
+      "灵石": 61200
+    },
+    "success_rate": 68
+  },
+  {
+    "id": 21,
+    "name": "星辰造化丹",
+    "category": "修为",
+    "level_required": 25,
+    "materials": {
+      "九叶灵芝": 2,
+      "天材地宝": 2,
+      "混沌精华": 1,
+      "灵石": 81900
+    },
+    "success_rate": 65
+  },
+  {
+    "id": 22,
+    "name": "混元道丹",
+    "category": "修为",
+    "level_required": 27,
+    "materials": {
+      "九叶灵芝": 2,
+      "天材地宝": 2,
+      "混沌精华": 1,
+      "灵石": 292500
+    },
+    "success_rate": 65
+  },
+  {
+    "id": 23,
+    "name": "太极阴阳丹",
+    "category": "修为",
+    "level_required": 28,
+    "materials": {
+      "九叶灵芝": 2,
+      "天材地宝": 3,
+      "混沌精华": 2,
+      "灵石": 669600
+    },
+    "success_rate": 62
+  },
+  {
+    "id": 24,
+    "name": "先天造化丹",
+    "category": "修为",
+    "level_required": 31,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 4,
+      "混沌精华": 3,
+      "灵石": 6480000
+    },
+    "success_rate": 60
+  },
+  {
+    "id": 25,
+    "name": "仙灵圣丹",
+    "category": "修为",
+    "level_required": 32,
+    "materials": {
+      "九叶灵芝": 4,
+      "天材地宝": 5,
+      "混沌精华": 4,
+      "灵石": 8352000
+    },
+    "success_rate": 58
+  },
+  {
+    "id": 26,
+    "name": "九天神丹",
+    "category": "修为",
+    "level_required": 33,
+    "materials": {
+      "九叶灵芝": 5,
+      "天材地宝": 6,
+      "混沌精华": 5,
+      "灵石": 15120000
+    },
+    "success_rate": 56
+  },
+  {
+    "id": 27,
+    "name": "大罗金丹",
+    "category": "修为",
+    "level_required": 34,
+    "materials": {
+      "九叶灵芝": 6,
+      "天材地宝": 7,
+      "混沌精华": 6,
+      "灵石": 24750000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 28,
+    "name": "混沌初开丹",
+    "category": "修为",
+    "level_required": 35,
+    "materials": {
+      "九叶灵芝": 7,
+      "天材地宝": 8,
+      "混沌精华": 7,
+      "灵石": 24750000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 29,
+    "name": "鸿蒙紫气丹",
+    "category": "修为",
+    "level_required": 35,
+    "materials": {
+      "九叶灵芝": 7,
+      "天材地宝": 8,
+      "混沌精华": 7,
+      "灵石": 33000000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 30,
+    "name": "造化天道丹",
+    "category": "修为",
+    "level_required": 35,
+    "materials": {
+      "九叶灵芝": 7,
+      "天材地宝": 8,
+      "混沌精华": 7,
+      "灵石": 41250000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 31,
+    "name": "筑基丹",
+    "category": "破境",
+    "level_required": 9,
+    "materials": {
+      "灵草": 9,
+      "冰心草": 1,
+      "灵石": 2250
+    },
+    "success_rate": 75
+  },
+  {
+    "id": 32,
+    "name": "固基丹·中",
+    "category": "破境",
+    "level_required": 10,
+    "materials": {
+      "灵草": 6,
+      "血灵草": 3,
+      "冰心草": 2,
+      "灵石": 3360
+    },
+    "success_rate": 70
+  },
+  {
+    "id": 33,
+    "name": "固基丹·后",
+    "category": "破境",
+    "level_required": 11,
+    "materials": {
+      "灵草": 6,
+      "血灵草": 3,
+      "冰心草": 2,
+      "灵石": 5040
+    },
+    "success_rate": 70
+  },
+  {
+    "id": 34,
+    "name": "结丹丹",
+    "category": "破境",
+    "level_required": 12,
+    "materials": {
+      "灵草": 6,
+      "血灵草": 3,
+      "冰心草": 2,
+      "灵石": 6300
+    },
+    "success_rate": 70
+  },
+  {
+    "id": 35,
+    "name": "温丹丹·中",
+    "category": "破境",
+    "level_required": 13,
+    "materials": {
+      "灵草": 6,
+      "火焰花": 2,
+      "灵兽内丹": 2,
+      "灵石": 9750
+    },
+    "success_rate": 65
+  },
+  {
+    "id": 36,
+    "name": "温丹丹·后",
+    "category": "破境",
+    "level_required": 14,
+    "materials": {
+      "灵草": 6,
+      "火焰花": 2,
+      "灵兽内丹": 2,
+      "灵石": 15600
+    },
+    "success_rate": 65
+  },
+  {
+    "id": 37,
+    "name": "凝婴丹",
+    "category": "破境",
+    "level_required": 15,
+    "materials": {
+      "灵草": 6,
+      "火焰花": 2,
+      "灵兽内丹": 2,
+      "灵石": 19500
+    },
+    "success_rate": 65
+  },
+  {
+    "id": 38,
+    "name": "养婴丹·中",
+    "category": "破境",
+    "level_required": 16,
+    "materials": {
+      "冰心草": 3,
+      "火焰花": 3,
+      "秘境精华": 2,
+      "灵石": 29760
+    },
+    "success_rate": 62
+  },
+  {
+    "id": 39,
+    "name": "养婴丹·后",
+    "category": "破境",
+    "level_required": 17,
+    "materials": {
+      "冰心草": 3,
+      "火焰花": 3,
+      "秘境精华": 2,
+      "灵石": 55800
+    },
+    "success_rate": 62
+  },
+  {
+    "id": 40,
+    "name": "化神丹",
+    "category": "破境",
+    "level_required": 18,
+    "materials": {
+      "冰心草": 3,
+      "火焰花": 3,
+      "秘境精华": 2,
+      "灵石": 74400
+    },
+    "success_rate": 62
+  },
+  {
+    "id": 41,
+    "name": "温神丹·中",
+    "category": "破境",
+    "level_required": 19,
+    "materials": {
+      "冰心草": 5,
+      "九叶灵芝": 2,
+      "天材地宝": 2,
+      "灵石": 126000
+    },
+    "success_rate": 60
+  },
+  {
+    "id": 42,
+    "name": "温神丹·后",
+    "category": "破境",
+    "level_required": 20,
+    "materials": {
+      "冰心草": 5,
+      "九叶灵芝": 2,
+      "天材地宝": 2,
+      "灵石": 216000
+    },
+    "success_rate": 60
+  },
+  {
+    "id": 43,
+    "name": "炼虚丹",
+    "category": "破境",
+    "level_required": 21,
+    "materials": {
+      "冰心草": 5,
+      "九叶灵芝": 2,
+      "天材地宝": 2,
+      "灵石": 288000
+    },
+    "success_rate": 60
+  },
+  {
+    "id": 44,
+    "name": "破虚丹·中",
+    "category": "破境",
+    "level_required": 22,
+    "materials": {
+      "九叶灵芝": 2,
+      "秘境精华": 3,
+      "天材地宝": 2,
+      "灵石": 522000
+    },
+    "success_rate": 58
+  },
+  {
+    "id": 45,
+    "name": "破虚丹·后",
+    "category": "破境",
+    "level_required": 23,
+    "materials": {
+      "九叶灵芝": 2,
+      "秘境精华": 3,
+      "天材地宝": 2,
+      "灵石": 870000
+    },
+    "success_rate": 58
+  },
+  {
+    "id": 46,
+    "name": "合体丹",
+    "category": "破境",
+    "level_required": 24,
+    "materials": {
+      "九叶灵芝": 2,
+      "秘境精华": 3,
+      "天材地宝": 2,
+      "灵石": 1044000
+    },
+    "success_rate": 58
+  },
+  {
+    "id": 47,
+    "name": "融合丹·中",
+    "category": "破境",
+    "level_required": 25,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 3,
+      "混沌精华": 2,
+      "灵石": 1650000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 48,
+    "name": "融合丹·后",
+    "category": "破境",
+    "level_required": 26,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 3,
+      "混沌精华": 2,
+      "灵石": 2640000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 49,
+    "name": "大乘丹",
+    "category": "破境",
+    "level_required": 27,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 3,
+      "混沌精华": 2,
+      "灵石": 3300000
+    },
+    "success_rate": 55
+  },
+  {
+    "id": 50,
+    "name": "悟道丹·中",
+    "category": "破境",
+    "level_required": 28,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 5,
+      "混沌精华": 3,
+      "灵石": 6240000
+    },
+    "success_rate": 52
+  },
+  {
+    "id": 51,
+    "name": "悟道丹·后",
+    "category": "破境",
+    "level_required": 29,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 5,
+      "混沌精华": 3,
+      "灵石": 10920000
+    },
+    "success_rate": 52
+  },
+  {
+    "id": 52,
+    "name": "渡劫丹",
+    "category": "破境",
+    "level_required": 30,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 5,
+      "混沌精华": 3,
+      "灵石": 15600000
+    },
+    "success_rate": 52
+  },
+  {
+    "id": 53,
+    "name": "地仙丹",
+    "category": "破境",
+    "level_required": 31,
+    "materials": {
+      "九叶灵芝": 5,
+      "天材地宝": 6,
+      "混沌精华": 5,
+      "灵石": 60000000
+    },
+    "success_rate": 50
+  },
+  {
+    "id": 54,
+    "name": "天仙丹",
+    "category": "破境",
+    "level_required": 32,
+    "materials": {
+      "九叶灵芝": 6,
+      "天材地宝": 8,
+      "混沌精华": 6,
+      "灵石": 230400000
+    },
+    "success_rate": 48
+  },
+  {
+    "id": 55,
+    "name": "大罗金仙丹",
+    "category": "破境",
+    "level_required": 33,
+    "materials": {
+      "九叶灵芝": 8,
+      "天材地宝": 9,
+      "混沌精华": 8,
+      "灵石": 828000000
+    },
+    "success_rate": 46
+  },
+  {
+    "id": 56,
+    "name": "混元丹",
+    "category": "破境",
+    "level_required": 34,
+    "materials": {
+      "九叶灵芝": 9,
+      "天材地宝": 11,
+      "混沌精华": 9,
+      "灵石": 2700000000
+    },
+    "success_rate": 45
+  },
+  {
+    "id": 57,
+    "name": "小回灵丹",
+    "category": "回复",
+    "level_required": 0,
+    "materials": {
+      "灵草": 1,
+      "灵石": 54
+    },
+    "success_rate": 90
+  },
+  {
+    "id": 58,
+    "name": "回灵丹",
+    "category": "回复",
+    "level_required": 3,
+    "materials": {
+      "灵草": 1,
+      "灵石": 162
+    },
+    "success_rate": 90
+  },
+  {
+    "id": 59,
+    "name": "大回灵丹",
+    "category": "回复",
+    "level_required": 10,
+    "materials": {
+      "灵草": 2,
+      "血灵草": 1,
+      "冰心草": 1,
+      "灵石": 408
+    },
+    "success_rate": 85
+  },
+  {
+    "id": 60,
+    "name": "满灵丹",
+    "category": "回复",
+    "level_required": 13,
+    "materials": {
+      "灵草": 2,
+      "火焰花": 1,
+      "灵兽内丹": 1,
+      "灵石": 960
+    },
+    "success_rate": 80
+  },
+  {
+    "id": 61,
+    "name": "小回血丹",
+    "category": "回复",
+    "level_required": 0,
+    "materials": {
+      "灵草": 1,
+      "血灵草": 1,
+      "灵石": 54
+    },
+    "success_rate": 90,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 62,
+    "name": "回血丹",
+    "category": "回复",
+    "level_required": 3,
+    "materials": {
+      "灵草": 1,
+      "血灵草": 1,
+      "灵石": 162
+    },
+    "success_rate": 90,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 63,
+    "name": "大回血丹",
+    "category": "回复",
+    "level_required": 10,
+    "materials": {
+      "灵草": 2,
+      "血灵草": 1,
+      "冰心草": 1,
+      "灵石": 408
+    },
+    "success_rate": 85,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 64,
+    "name": "满血丹",
+    "category": "回复",
+    "level_required": 13,
+    "materials": {
+      "灵草": 2,
+      "火焰花": 1,
+      "灵兽内丹": 1,
+      "血灵草": 2,
+      "灵石": 960
+    },
+    "success_rate": 80,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 65,
+    "name": "帝血丹",
+    "category": "回复",
+    "level_required": 22,
+    "materials": {
+      "九叶灵芝": 1,
+      "秘境精华": 1,
+      "天材地宝": 1,
+      "血灵草": 5,
+      "灵石": 13500
+    },
+    "success_rate": 75,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 66,
+    "name": "道血丹",
+    "category": "回复",
+    "level_required": 25,
+    "materials": {
+      "九叶灵芝": 1,
+      "天材地宝": 1,
+      "混沌精华": 1,
+      "血灵草": 6,
+      "灵石": 45000
+    },
+    "success_rate": 75,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 67,
+    "name": "仙血丹",
+    "category": "回复",
+    "level_required": 31,
+    "materials": {
+      "九叶灵芝": 1,
+      "天材地宝": 2,
+      "混沌精华": 1,
+      "血灵草": 8,
+      "灵石": 180000
+    },
+    "success_rate": 75,
+    "cultivation_type": "体修"
+  },
+  {
+    "id": 68,
+    "name": "混元血丹",
+    "category": "回复",
+    "level_required": 35,
+    "materials": {
+      "九叶灵芝": 3,
+      "天材地宝": 4,
+      "混沌精华": 3,
+      "血灵草": 12,
+      "灵石": 675000
+    },
+    "success_rate": 75,
+    "cultivation_type": "体修"
+  }
 ]

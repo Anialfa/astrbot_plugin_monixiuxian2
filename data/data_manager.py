@@ -8,6 +8,7 @@ from typing import Tuple, List, Optional
 from astrbot.api import logger
 from ..models import Player
 from .database_extended import DatabaseExtended
+from .transaction import Transactions
 
 # 获取 Player 模型的所有字段名（用于过滤数据库中的多余字段，作为迁移未完成时的兼容）
 PLAYER_FIELDS = {f.name for f in fields(Player)}
@@ -17,8 +18,29 @@ class DataBase:
 
     def __init__(self, db_file: str = "xiuxian_data_lite.db"):
         self.db_path = Path(db_file)
+        self._transactions = Transactions(self)
         self.conn: aiosqlite.Connection = None
         self.ext: Optional[DatabaseExtended] = None  # 扩展操作类
+
+    @property
+    def conn(self):
+        return self._transactions.current.get() or self._conn
+
+    @conn.setter
+    def conn(self, connection):
+        self._conn = connection
+
+    @property
+    def ext(self):
+        transaction = self._transactions.current.get()
+        return DatabaseExtended(transaction) if transaction is not None else self._ext
+
+    @ext.setter
+    def ext(self, extended):
+        self._ext = extended
+
+    def transaction(self):
+        return self._transactions.open()
 
     async def connect(self):
         """连接数据库"""
@@ -120,6 +142,45 @@ class DataBase:
                 player.last_daily_reset
             )
         )
+        await self.conn.execute(
+            "INSERT OR IGNORE INTO user_cd (user_id) VALUES (?)", (player.user_id,)
+        )
+        await self.conn.execute(
+            "INSERT OR IGNORE INTO buff_info (user_id) VALUES (?)", (player.user_id,)
+        )
+        await self.conn.execute(
+            "INSERT OR IGNORE INTO impart_info (user_id) VALUES (?)", (player.user_id,)
+        )
+        await self.conn.commit()
+        player._persisted_ring_items = player.storage_ring_items
+
+    async def initialize_player_records(self):
+        """补齐旧角色关联记录，并同步此前写入失败的闭关状态。"""
+        try:
+            await self.conn.execute("""
+                INSERT OR IGNORE INTO user_cd (user_id, type, create_time)
+                SELECT user_id,
+                    CASE WHEN state = '修炼中' THEN 1 ELSE 0 END,
+                    CASE WHEN state = '修炼中' THEN cultivation_start_time ELSE 0 END
+                FROM players
+            """)
+            await self.conn.execute(
+                "INSERT OR IGNORE INTO buff_info (user_id) SELECT user_id FROM players"
+            )
+            await self.conn.execute(
+                "INSERT OR IGNORE INTO impart_info (user_id) SELECT user_id FROM players"
+            )
+            await self.conn.execute("""
+                UPDATE user_cd SET type = 1,
+                    create_time = (SELECT cultivation_start_time FROM players
+                                   WHERE players.user_id = user_cd.user_id)
+                WHERE type = 0 AND user_id IN (
+                    SELECT user_id FROM players WHERE state = '修炼中'
+                )
+            """)
+        except Exception:
+            await self.conn.rollback()
+            raise
         await self.conn.commit()
 
     async def get_player_by_id(self, user_id: str) -> Player:
@@ -132,7 +193,9 @@ class DataBase:
             if row:
                 # 过滤掉 Player 模型中不存在的字段（兼容旧数据库/迁移未完成的情况）
                 filtered_data = {k: v for k, v in dict(row).items() if k in PLAYER_FIELDS}
-                return Player(**filtered_data)
+                player = Player(**filtered_data)
+                player._persisted_ring_items = player.storage_ring_items
+                return player
             return None
 
     async def get_player_by_name(self, user_name: str) -> Player:
@@ -144,11 +207,15 @@ class DataBase:
             row = await cursor.fetchone()
             if row:
                 filtered_data = {k: v for k, v in dict(row).items() if k in PLAYER_FIELDS}
-                return Player(**filtered_data)
+                player = Player(**filtered_data)
+                player._persisted_ring_items = player.storage_ring_items
+                return player
             return None
 
     async def update_player(self, player: Player):
         """更新玩家信息"""
+        # An unrelated command may hold a player loaded before an inventory reward.
+        # Preserve the current DB inventory unless this object actually changed it.
         await self.conn.execute(
             """
             UPDATE players SET
@@ -193,7 +260,7 @@ class DataBase:
                 has_debuff_shield = ?,
                 pills_inventory = ?,
                 storage_ring = ?,
-                storage_ring_items = ?,
+                storage_ring_items = CASE WHEN ? THEN ? ELSE storage_ring_items END,
                 daily_pill_usage = ?,
                 last_daily_reset = ?
             WHERE user_id = ?
@@ -240,6 +307,7 @@ class DataBase:
                 int(player.has_debuff_shield),
                 player.pills_inventory,
                 player.storage_ring,
+                player.storage_ring_items != getattr(player, "_persisted_ring_items", None),
                 player.storage_ring_items,
                 player.daily_pill_usage,
                 player.last_daily_reset,
@@ -247,6 +315,7 @@ class DataBase:
             )
         )
         await self.conn.commit()
+        player._persisted_ring_items = player.storage_ring_items
 
     async def delete_player(self, user_id: str):
         """删除玩家"""
@@ -277,7 +346,7 @@ class DataBase:
             ("DELETE FROM user_cd WHERE user_id = ?", (user_id,)),
             ("DELETE FROM buff_info WHERE user_id = ?", (user_id,)),
             ("DELETE FROM impart_info WHERE user_id = ?", (user_id,)),
-            ("DELETE FROM combat_cooldowns WHERE attacker_id = ? OR defender_id = ?", (user_id, user_id)),
+            ("DELETE FROM combat_cooldowns WHERE user_id = ?", (user_id,)),
             ("DELETE FROM pending_gifts WHERE sender_id = ? OR receiver_id = ?", (user_id, user_id)),
         ]
 

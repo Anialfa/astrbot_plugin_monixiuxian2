@@ -13,6 +13,7 @@ from astrbot.api import logger
 
 from ..data.data_manager import DataBase
 from ..models import Player
+from ..data.transaction import atomic_operation
 from ..models_extended import UserStatus
 
 if TYPE_CHECKING:
@@ -203,6 +204,7 @@ class AdventureManager:
 
         return True, "\n".join(hint)
 
+    @atomic_operation
     async def finish_adventure(self, user_id: str) -> Tuple[bool, str, Optional[Dict]]:
         """结算历练"""
         player = await self.db.get_player_by_id(user_id)

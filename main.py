@@ -278,6 +278,7 @@ class XiuXianPlugin(Star):
         await self.db.connect()
         migration_manager = MigrationManager(self.db.conn, self.config_manager)
         await migration_manager.migrate()
+        await self.db.initialize_player_records()
         
         # 确保系统配置表存在
         await self.db.ext.ensure_system_config_table()
@@ -998,8 +999,8 @@ class XiuXianPlugin(Star):
     # ===== 炼丹指令 =====
     @filter.command(CMD_ALCHEMY_RECIPES, "查看丹药配方")
     @require_whitelist
-    async def handle_alchemy_recipes(self, event: AstrMessageEvent):
-        async for r in self.alchemy_handlers.handle_recipes(event):
+    async def handle_alchemy_recipes(self, event: AstrMessageEvent, page: int = 1, category: str = "全部"):
+        async for r in self.alchemy_handlers.handle_recipes(event, page, category):
             yield r
 
     @filter.command(CMD_ALCHEMY_CRAFT, "炼制丹药")

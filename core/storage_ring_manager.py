@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, Optional, Tuple, List, Dict
 from ..models import Player
+from ..data.transaction import atomic_operation
 
 if TYPE_CHECKING:
     from ..data import DataBase
@@ -72,23 +73,23 @@ class StorageRingManager:
 
         return True, ""
 
+    @atomic_operation
     async def store_item(self, player: Player, item_name: str, count: int = 1, silent: bool = False, external_transaction: bool = False) -> Tuple[bool, str]:
         """将物品存入储物戒（带事务保护）
         
         Args:
-            external_transaction: 如果为True，表示外部已有事务，跳过内部事务管理
+            external_transaction: 保留兼容参数；嵌套调用自动加入当前操作事务
         """
+        if not isinstance(count, int) or count <= 0:
+            return False, "数量必须为正整数"
         can_store, reason = self.can_store_item(item_name)
         if not can_store:
             return False, reason
 
-        if not external_transaction:
-            await self.db.conn.execute("BEGIN IMMEDIATE")
+        caller = player
         try:
             fresh_player = await self.db.get_player_by_id(player.user_id)
             if not fresh_player:
-                if not external_transaction:
-                    await self.db.conn.rollback()
                 return False, "玩家不存在或已被删除"
             player = fresh_player
             items = player.get_storage_ring_items()
@@ -96,16 +97,17 @@ class StorageRingManager:
             if item_name not in items:
                 available = self.get_available_slots(player)
                 if available <= 0:
-                    if not external_transaction:
-                        await self.db.conn.rollback()
                     capacity = self.get_ring_capacity(player.storage_ring)
                     return False, f"储物戒已满！({capacity}/{capacity}格)"
 
             items[item_name] = items.get(item_name, 0) + count
             player.set_storage_ring_items(items)
-            await self.db.update_player(player)
-            if not external_transaction:
-                await self.db.conn.commit()
+            await self.db.conn.execute(
+                "UPDATE players SET storage_ring_items = ? WHERE user_id = ?",
+                (player.storage_ring_items, player.user_id)
+            )
+            caller.storage_ring_items = player.storage_ring_items
+            caller._persisted_ring_items = player.storage_ring_items
 
             capacity = self.get_ring_capacity(player.storage_ring)
             used = self.get_used_slots(player)
@@ -120,24 +122,25 @@ class StorageRingManager:
 
             return True, msg
         except Exception:
-            if not external_transaction:
-                await self.db.conn.rollback()
             raise
 
+    @atomic_operation
     async def retrieve_item(self, player: Player, item_name: str, count: int = 1) -> Tuple[bool, str]:
         """从储物戒取出物品（带事务保护）"""
-        await self.db.conn.execute("BEGIN IMMEDIATE")
+        if not isinstance(count, int) or count <= 0:
+            return False, "数量必须为正整数"
+        caller = player
         try:
             player = await self.db.get_player_by_id(player.user_id)
+            if not player:
+                return False, "玩家不存在或已被删除"
             items = player.get_storage_ring_items()
 
             if item_name not in items:
-                await self.db.conn.rollback()
                 return False, f"储物戒中没有【{item_name}】"
 
             current_count = items[item_name]
             if count > current_count:
-                await self.db.conn.rollback()
                 return False, f"储物戒中【{item_name}】数量不足（当前：{current_count}个）"
 
             if count >= current_count:
@@ -146,30 +149,36 @@ class StorageRingManager:
                 items[item_name] = current_count - count
 
             player.set_storage_ring_items(items)
-            await self.db.update_player(player)
-            await self.db.conn.commit()
+            await self.db.conn.execute(
+                "UPDATE players SET storage_ring_items = ? WHERE user_id = ?",
+                (player.storage_ring_items, player.user_id)
+            )
+            caller.storage_ring_items = player.storage_ring_items
+            caller._persisted_ring_items = player.storage_ring_items
 
             capacity = self.get_ring_capacity(player.storage_ring)
             used = self.get_used_slots(player)
             return True, f"已从储物戒取出【{item_name}】x{count}（{used}/{capacity}格）"
         except Exception:
-            await self.db.conn.rollback()
             raise
 
+    @atomic_operation
     async def discard_item(self, player: Player, item_name: str, count: int = 1) -> Tuple[bool, str]:
         """丢弃储物戒中的物品（带事务保护）"""
-        await self.db.conn.execute("BEGIN IMMEDIATE")
+        if not isinstance(count, int) or count <= 0:
+            return False, "数量必须为正整数"
+        caller = player
         try:
             player = await self.db.get_player_by_id(player.user_id)
+            if not player:
+                return False, "玩家不存在或已被删除"
             items = player.get_storage_ring_items()
 
             if item_name not in items:
-                await self.db.conn.rollback()
                 return False, f"储物戒中没有【{item_name}】"
 
             current_count = items[item_name]
             if count > current_count:
-                await self.db.conn.rollback()
                 return False, f"储物戒中【{item_name}】数量不足（当前：{current_count}个）"
 
             if count >= current_count:
@@ -180,15 +189,38 @@ class StorageRingManager:
                 discard_count = count
 
             player.set_storage_ring_items(items)
-            await self.db.update_player(player)
-            await self.db.conn.commit()
+            await self.db.conn.execute(
+                "UPDATE players SET storage_ring_items = ? WHERE user_id = ?",
+                (player.storage_ring_items, player.user_id)
+            )
+            caller.storage_ring_items = player.storage_ring_items
+            caller._persisted_ring_items = player.storage_ring_items
 
             capacity = self.get_ring_capacity(player.storage_ring)
             used = self.get_used_slots(player)
             return True, f"已丢弃【{item_name}】x{discard_count}（{used}/{capacity}格）"
         except Exception:
-            await self.db.conn.rollback()
             raise
+
+    @atomic_operation
+    async def recover_expired_gifts(self, user_id: str) -> Tuple[int, int]:
+        """Return expired gifts; keep records until there is room to receive them."""
+        import time
+        async with self.db.conn.execute(
+            "SELECT id, item_name, count FROM pending_gifts WHERE sender_id = ? AND expires_at <= ? ORDER BY id",
+            (user_id, int(time.time()))
+        ) as cursor:
+            gifts = await cursor.fetchall()
+        player = await self.db.get_player_by_id(user_id)
+        if not player:
+            return 0, len(gifts)
+        recovered = 0
+        for gift in gifts:
+            success, _ = await self.store_item(player, gift["item_name"], gift["count"], silent=True)
+            if success:
+                await self.db.ext.delete_pending_gift(gift["id"])
+                recovered += 1
+        return recovered, len(gifts) - recovered
 
     def check_upgrade_requirement(self, player: Player, new_ring_name: str) -> Tuple[bool, str]:
         """检查玩家是否满足储物戒升级要求"""
@@ -230,8 +262,12 @@ class StorageRingManager:
             return f"境界{level_index}"
         return " / ".join(names)
 
+    @atomic_operation
     async def upgrade_ring(self, player: Player, new_ring_name: str) -> Tuple[bool, str]:
         """升级/替换储物戒"""
+        player = await self.db.get_player_by_id(player.user_id)
+        if not player:
+            return False, "玩家不存在或已被删除"
         can_upgrade, error_msg = self.check_upgrade_requirement(player, new_ring_name)
         if not can_upgrade:
             return False, error_msg

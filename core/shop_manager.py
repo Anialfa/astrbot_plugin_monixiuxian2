@@ -166,6 +166,18 @@ class ShopManager:
         """
         updated = False
         for item in shop_items:
+            # Reprice cached exp pills after balance updates without refilling stock.
+            if item.get('type') == 'exp_pill':
+                current = self.config_manager.exp_pills_data.get(item.get('name'))
+                if current:
+                    old_data = item.get('data') or {}
+                    old_price = item.get('original_price', old_data.get('price', item.get('price')))
+                    if old_price != current['price'] or old_data.get('exp_gain') != current['exp_gain']:
+                        discount = item.get('discount', 1.0)
+                        item['original_price'] = current['price']
+                        item['price'] = int(current['price'] * discount)
+                        item['data'] = current.copy()
+                        updated = True
             stock = item.get('stock')
             if stock is None:
                 data = item.get('data', {})

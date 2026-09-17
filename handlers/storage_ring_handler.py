@@ -7,6 +7,7 @@ from ..core import StorageRingManager
 from ..config_manager import ConfigManager
 from ..models import Player
 from .utils import player_required
+from ..data.transaction import atomic_operation
 
 CMD_STORAGE_RING = "储物戒"
 CMD_STORE_ITEM = "存入"
@@ -46,9 +47,15 @@ class StorageRingHandler:
     async def handle_storage_ring(self, player: Player, event: AstrMessageEvent):
         """显示储物戒信息"""
         display_name = event.get_sender_name()
+        recovered, pending = await self.storage_ring_manager.recover_expired_gifts(player.user_id)
+        player = await self.db.get_player_by_id(player.user_id)
 
         # 获取储物戒信息
         ring_info = self.storage_ring_manager.get_storage_ring_info(player)
+        if recovered:
+            yield event.plain_result(f"已领回 {recovered} 笔过期赠予。")
+        if pending:
+            yield event.plain_result(f"仍有 {pending} 笔过期赠予待领回，请腾出空间后再次查看储物戒。")
 
         lines = [
             f"=== {display_name} 的储物戒 ===\n",
@@ -103,36 +110,10 @@ class StorageRingHandler:
     @player_required
     async def handle_retrieve_item(self, player: Player, event: AstrMessageEvent, args: str):
         """从储物戒取出物品"""
-        if not args or args.strip() == "":
-            yield event.plain_result(
-                f"请指定要取出的物品\n"
-                f"用法：{CMD_RETRIEVE_ITEM} 物品名 [数量]\n"
-                f"示例：{CMD_RETRIEVE_ITEM} 精铁 5"
-            )
-            return
-
-        args = args.strip()
-        parts = args.rsplit(" ", 1)
-
-        # 解析物品名和数量
-        if len(parts) == 2 and parts[1].isdigit():
-            item_name = parts[0]
-            count = int(parts[1])
-        else:
-            item_name = args
-            count = 1
-
-        if count <= 0:
-            yield event.plain_result("数量必须大于0")
-            return
-
-        # 取出物品
-        success, message = await self.storage_ring_manager.retrieve_item(player, item_name, count)
-
-        if success:
-            yield event.plain_result(f"✅ {message}")
-        else:
-            yield event.plain_result(f"❌ {message}")
+        yield event.plain_result(
+            "物品保留在储物戒中，无需手动取出。\n"
+            "装备请使用「装备 物品名」，炼丹会自动扣除材料；永久删除请使用「丢弃」。"
+        )
 
     @player_required
     async def handle_discard_item(self, player: Player, event: AstrMessageEvent, args: str):
@@ -170,6 +151,7 @@ class StorageRingHandler:
             yield event.plain_result(f"❌ {message}")
 
     @player_required
+    @atomic_operation
     async def handle_gift_item(self, player: Player, event: AstrMessageEvent, args: str):
         """赠予物品给其他玩家"""
         target_id = None
@@ -236,6 +218,10 @@ class StorageRingHandler:
             yield event.plain_result("数量必须大于0")
             return
 
+        player = await self.db.get_player_by_id(player.user_id)
+        if not player:
+            yield event.plain_result("玩家不存在或已被删除")
+            return
         # 检查物品是否在储物戒中
         if not self.storage_ring_manager.has_item(player, item_name, count):
             current = self.storage_ring_manager.get_item_count(player, item_name)
@@ -279,6 +265,7 @@ class StorageRingHandler:
         )
 
     @player_required
+    @atomic_operation
     async def handle_accept_gift(self, player: Player, event: AstrMessageEvent):
         """接收赠予的物品"""
         user_id = player.user_id
@@ -305,20 +292,13 @@ class StorageRingHandler:
                 f"获得：【{item_name}】x{count}"
             )
         else:
-            # 存入失败，物品返还给发送者
-            sender_id = gift["sender_id"]
-            sender_player = await self.db.get_player_by_id(sender_id)
-            if sender_player:
-                await self.storage_ring_manager.store_item(sender_player, item_name, count, silent=True)
-
-            # 删除数据库中的赠予请求
-            await self.db.ext.delete_pending_gift(gift_id)
             yield event.plain_result(
                 f"❌ 接收失败：{message}\n"
-                f"物品已返还给【{sender_name}】"
+                f"物品仍保留在赠予请求中，可腾出空间后再次接收，或使用「拒绝」退回。"
             )
 
     @player_required
+    @atomic_operation
     async def handle_reject_gift(self, player: Player, event: AstrMessageEvent):
         """拒绝赠予的物品"""
         user_id = player.user_id
@@ -337,8 +317,13 @@ class StorageRingHandler:
 
         # 物品返还给发送者
         sender_player = await self.db.get_player_by_id(sender_id)
-        if sender_player:
-            await self.storage_ring_manager.store_item(sender_player, item_name, count, silent=True)
+        if not sender_player:
+            yield event.plain_result("返还失败：发送者角色不存在，赠予记录已保留。")
+            return
+        success, reason = await self.storage_ring_manager.store_item(sender_player, item_name, count, silent=True)
+        if not success:
+            yield event.plain_result(f"返还失败：{reason}。赠予记录已保留，可稍后再次拒绝。")
+            return
 
         # 删除数据库中的赠予请求
         await self.db.ext.delete_pending_gift(gift_id)
@@ -483,46 +468,4 @@ class StorageRingHandler:
     @player_required
     async def handle_retrieve_all(self, player: Player, event: AstrMessageEvent, category: str = None):
         """批量取出指定分类的物品"""
-        if not category or category.strip() == "":
-            yield event.plain_result(
-                f"请指定要取出的分类\n"
-                f"用法：{CMD_RETRIEVE_ALL} 分类名\n"
-                f"可用分类：材料、装备、功法、其他\n"
-                f"示例：{CMD_RETRIEVE_ALL} 材料"
-            )
-            return
-        
-        category = category.strip()
-        if category not in ITEM_CATEGORIES:
-            yield event.plain_result(f"未知分类：{category}\n可用分类：材料、装备、功法、其他")
-            return
-        
-        items = player.get_storage_ring_items()
-        categorized = self._categorize_items(items)
-        cat_items = categorized.get(category, [])
-        
-        if not cat_items:
-            yield event.plain_result(f"储物戒中没有【{category}】类物品")
-            return
-        
-        # 取出所有该分类的物品
-        retrieved = []
-        failed = []
-        for item_name, count in cat_items:
-            success, msg = await self.storage_ring_manager.retrieve_item(player, item_name, count)
-            if success:
-                retrieved.append(f"{item_name}×{count}")
-            else:
-                failed.append(f"{item_name}：{msg}")
-        
-        lines = [f"=== 批量取出【{category}】 ===\n"]
-        if retrieved:
-            lines.append(f"✅ 已取出：\n")
-            for item in retrieved:
-                lines.append(f"  · {item}\n")
-        if failed:
-            lines.append(f"\n❌ 失败：\n")
-            for item in failed:
-                lines.append(f"  · {item}\n")
-        
-        yield event.plain_result("".join(lines))
+        yield event.plain_result("物品保留在储物戒中，无需批量取出。装备和炼丹会直接使用戒中物品。")

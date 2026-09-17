@@ -642,9 +642,6 @@ class DatabaseExtended:
         import time
         now = int(time.time())
         
-        # 先清理过期的请求
-        await self.cleanup_expired_gifts()
-        
         async with self.conn.execute(
             """
             SELECT id, receiver_id, sender_id, sender_name, item_name, count, created_at, expires_at
@@ -715,14 +712,8 @@ class DatabaseExtended:
         await self.conn.commit()
     
     async def cleanup_expired_gifts(self):
-        """清理过期的赠予请求"""
-        import time
-        now = int(time.time())
-        await self.conn.execute(
-            "DELETE FROM pending_gifts WHERE expires_at < ?",
-            (now,)
-        )
-        await self.conn.commit()
+        """保留过期记录，由发送者查看储物戒时原子退回后删除。"""
+        return
     
     # ===== Phase 3: 银行贷款系统 CRUD =====
     

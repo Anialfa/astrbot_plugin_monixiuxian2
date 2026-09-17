@@ -57,9 +57,6 @@ class PillHandler:
 
         pill_name = pill_name.strip()
 
-        # 先更新临时效果（移除过期的）
-        await self.pill_manager.update_temporary_effects(player)
-
         # 使用丹药
         success, message = await self.pill_manager.use_pill(player, pill_name)
 

@@ -132,12 +132,6 @@ class EquipmentHandler:
             )
             return
 
-        # 从储物戒取出物品
-        success, retrieve_msg = await self.storage_ring_manager.retrieve_item(player, item_name, 1)
-        if not success:
-            yield event.plain_result(f"❌ 无法从储物戒取出装备：{retrieve_msg}")
-            return
-
         # 创建Item对象
         from ..models import Item
         item = Item(
@@ -170,8 +164,6 @@ class EquipmentHandler:
             )
             yield event.plain_result(result_msg)
         else:
-            # 装备失败，将物品放回储物戒
-            await self.storage_ring_manager.store_item(player, item_name, 1, silent=True)
             yield event.plain_result(f"❌ {message}")
 
     @player_required
@@ -186,35 +178,10 @@ class EquipmentHandler:
 
         slot_or_name = slot_or_name.strip()
 
-        # 获取卸下前的装备名称，用于存入储物戒
-        unequipped_item_name = None
-        if slot_or_name in ["武器", "weapon"]:
-            unequipped_item_name = player.weapon
-        elif slot_or_name in ["防具", "armor"]:
-            unequipped_item_name = player.armor
-        elif slot_or_name in ["主修心法", "心法", "main_technique"]:
-            unequipped_item_name = player.main_technique
-        else:
-            # 检查功法列表
-            techniques_list = player.get_techniques_list()
-            if slot_or_name in techniques_list:
-                unequipped_item_name = slot_or_name
-
         # 卸下装备
         success, message = await self.equipment_manager.unequip_item(player, slot_or_name)
 
         if success:
-            # 卸下成功后，将装备存入储物戒
-            storage_msg = ""
-            if unequipped_item_name:
-                store_success, store_msg = await self.storage_ring_manager.store_item(
-                    player, unequipped_item_name, 1, silent=True
-                )
-                if store_success:
-                    storage_msg = f"\n已存入储物戒"
-                else:
-                    storage_msg = f"\n⚠️ 存入储物戒失败：{store_msg}"
-            
-            yield event.plain_result(f"✅ {message}{storage_msg}")
+            yield event.plain_result(f"✅ {message}")
         else:
             yield event.plain_result(f"❌ {message}")

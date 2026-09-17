@@ -29,12 +29,11 @@ class MigrationManager:
             if await cursor.fetchone() is None:
                 logger.info("未检测到数据库版本，将进行全新安装...")
                 await self.conn.execute("BEGIN")
-                # 使用最新的建表函数
+                # 当前建表函数覆盖到 v13；后续迁移仍需执行。
                 await _create_all_tables_v2(self.conn)
-                await self.conn.execute("INSERT INTO db_info (version) VALUES (?)", (LATEST_DB_VERSION,))
+                await self.conn.execute("INSERT INTO db_info (version) VALUES (?)", (13,))
                 await self.conn.commit()
-                logger.info(f"数据库已初始化到最新版本: v{LATEST_DB_VERSION}")
-                return
+                logger.info("基础数据库已初始化到 v13，继续执行后续迁移。")
 
         async with self.conn.execute("SELECT version FROM db_info") as cursor:
             row = await cursor.fetchone()

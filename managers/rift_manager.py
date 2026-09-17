@@ -9,6 +9,7 @@ from typing import Tuple, List, Optional, Dict, TYPE_CHECKING
 from ..data.data_manager import DataBase
 from ..models_extended import Rift, UserStatus
 from ..models import Player
+from ..data.transaction import atomic_operation
 
 if TYPE_CHECKING:
     from ..core import StorageRingManager
@@ -167,6 +168,7 @@ class RiftManager:
         
         return True, f"✨ 你进入了『{rift.rift_name}』！探索需要 {self.explore_duration//60} 分钟。\n使用 /完成探索 领取奖励"
     
+    @atomic_operation
     async def finish_exploration(
         self,
         user_id: str
@@ -231,6 +233,7 @@ class RiftManager:
         
         # 6. 物品掉落（根据秘境等级）
         dropped_items = []
+        pill_rewards = []
         item_msg = ""
         dropped_items = await self._roll_rift_drops(player, rift_level, event["item_chance"])
         if dropped_items:
@@ -239,10 +242,7 @@ class RiftManager:
                 # 检查是否为丹药，丹药存入丹药背包，其他存入储物戒
                 is_pill = self._is_pill_item(item_name)
                 if is_pill:
-                    # 存入丹药背包
-                    inventory = player.get_pills_inventory()
-                    inventory[item_name] = inventory.get(item_name, 0) + count
-                    player.set_pills_inventory(inventory)
+                    pill_rewards.append((item_name, count))
                     item_lines.append(f"  · {item_name} x{count}（丹药背包）")
                 elif self.storage_ring_manager:
                     success, _ = await self.storage_ring_manager.store_item(player, item_name, count, silent=True)
@@ -256,6 +256,15 @@ class RiftManager:
                 item_msg = "\n\n📦 获得物品：\n" + "\n".join(item_lines)
         
         # 7. 应用奖励
+        # store_item 会另读玩家并保存，结算必须基于最新背包，丹药也在此统一加入。
+        player = await self.db.get_player_by_id(user_id)
+        if not player:
+            return False, "❌ 你还未踏入修仙之路！", None
+        if pill_rewards:
+            inventory = player.get_pills_inventory()
+            for item_name, count in pill_rewards:
+                inventory[item_name] = inventory.get(item_name, 0) + count
+            player.set_pills_inventory(inventory)
         player.experience += exp_reward
         player.gold += gold_reward
         await self.db.update_player(player)

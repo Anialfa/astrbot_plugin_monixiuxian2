@@ -9,10 +9,10 @@ class AlchemyHandlers:
         self.db = db
         self.alchemy_mgr = alchemy_mgr
 
-    async def handle_recipes(self, event: AstrMessageEvent):
+    async def handle_recipes(self, event: AstrMessageEvent, page: int = 1, category: str = "全部"):
         """丹药配方"""
         user_id = event.get_sender_id()
-        success, msg = await self.alchemy_mgr.get_available_recipes(user_id)
+        success, msg = await self.alchemy_mgr.get_available_recipes(user_id, page, category)
         yield event.plain_result(msg)
 
     async def handle_craft(self, event: AstrMessageEvent, pill_id: int):

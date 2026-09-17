@@ -128,9 +128,6 @@ class BreakthroughHandler:
         """执行突破"""
         display_name = event.get_sender_name()
 
-        await self.pill_manager.update_temporary_effects(player)
-        modifiers = self.pill_manager.get_breakthrough_modifiers(player)
-
         # 根据修炼类型获取对应的境界数据
         level_data = self.config_manager.get_level_data(player.cultivation_type)
 
@@ -170,12 +167,7 @@ class BreakthroughHandler:
         # 执行突破
         success, message, died = await self.breakthrough_manager.execute_breakthrough(
             player,
-            pill_name,
-            modifiers["temp_bonus"],
-            modifiers["permanent_death_multiplier"]
+            pill_name
         )
-
-        if modifiers["has_temp_effects"]:
-            await self.pill_manager.consume_breakthrough_effects(player)
 
         yield event.plain_result(message)

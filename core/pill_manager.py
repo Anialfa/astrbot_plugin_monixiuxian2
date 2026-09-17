@@ -6,6 +6,7 @@ from astrbot.api import logger
 
 from ..models import Player
 from ..data import DataBase
+from ..data.transaction import atomic_operation
 from ..config_manager import ConfigManager
 
 
@@ -94,6 +95,7 @@ class PillManager:
             player.set_active_pill_effects(updated_effects)
             await self.db.update_player(player)
 
+    @atomic_operation
     async def use_pill(
         self,
         player: Player,
@@ -108,6 +110,10 @@ class PillManager:
         Returns:
             (是否成功, 消息)
         """
+        fresh = await self.db.get_player_by_id(player.user_id)
+        if not fresh:
+            return False, "你还未踏入修仙之路！"
+        player.__dict__.update(fresh.__dict__)
         # 检查背包是否有该丹药
         inventory = player.get_pills_inventory()
         if pill_name not in inventory or inventory[pill_name] <= 0:
@@ -117,6 +123,12 @@ class PillManager:
         pill_data = self.get_pill_by_name(pill_name)
         if not pill_data:
             return False, f"丹药【{pill_name}】配置不存在！"
+
+        if pill_data.get("subtype") == "breakthrough":
+            return False, f"破境丹请使用：突破 {pill_name}。本次未消耗丹药。"
+        if ("blood_qi_restore" in pill_data and "spiritual_qi_restore" not in pill_data
+                and player.cultivation_type != "体修"):
+            return False, f"{pill_name}为体修气血回复丹，本次未消耗丹药。"
 
         # 检查境界需求
         required_level = pill_data.get("required_level_index", 0)
@@ -130,6 +142,7 @@ class PillManager:
                 f"境界不足！使用【{pill_name}】需要达到【{level_name}】"
             )
 
+        await self.update_temporary_effects(player)
         # 根据丹药类型处理
         effect_type = pill_data.get("effect_type", "instant")
         subtype = pill_data.get("subtype", "")

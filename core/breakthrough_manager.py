@@ -6,6 +6,7 @@ from astrbot.api import logger
 
 from ..models import Player
 from ..data import DataBase
+from ..data.transaction import atomic_operation
 from ..config_manager import ConfigManager
 
 
@@ -105,12 +106,13 @@ class BreakthroughManager:
 
         return final_rate, info
 
+    @atomic_operation
     async def execute_breakthrough(
         self,
         player: Player,
         pill_name: Optional[str] = None,
-        temp_bonus: float = 0.0,
-        death_rate_multiplier: float = 1.0
+        temp_bonus: Optional[float] = None,
+        death_rate_multiplier: Optional[float] = None
     ) -> Tuple[bool, str, bool]:
         """执行突破
 
@@ -121,13 +123,47 @@ class BreakthroughManager:
         Returns:
             (是否成功, 消息, 是否死亡)
         """
+        # 在事务内读取库存与境界，防止并发突破重复使用同一颗丹药。
+        fresh = await self.db.get_player_by_id(player.user_id)
+        if not fresh:
+            return False, "你还未踏入修仙之路！", False
+        player.__dict__.update(fresh.__dict__)
+        pill_name = pill_name.strip() if pill_name else None
+        if pill_name:
+            pill = self.config_manager.pills_data.get(pill_name)
+            if not pill or pill.get("subtype") != "breakthrough":
+                return False, f"无效的破境丹：{pill_name}", False
+            if pill.get("target_level_index") != player.level_index + 1:
+                return False, f"{pill_name}不适用于当前突破。", False
+            if player.get_pills_inventory().get(pill_name, 0) < 1:
+                return False, f"你的丹药背包中没有【{pill_name}】！", False
+
+        from .pill_manager import PillManager
+        pill_manager = PillManager(self.db, self.config_manager)
+        await pill_manager.update_temporary_effects(player)
         # 检查突破条件
         can_breakthrough, error_msg = self.check_breakthrough_requirements(player)
         if not can_breakthrough:
             return False, error_msg, False
 
+        modifiers = pill_manager.get_breakthrough_modifiers(player)
+        if temp_bonus is None:
+            temp_bonus = modifiers["temp_bonus"]
+        if death_rate_multiplier is None:
+            death_rate_multiplier = modifiers["permanent_death_multiplier"]
+        if pill_name:
+            inventory = player.get_pills_inventory()
+            inventory[pill_name] -= 1
+            if inventory[pill_name] == 0:
+                del inventory[pill_name]
+            player.set_pills_inventory(inventory)
+        if modifiers["has_temp_effects"]:
+            await pill_manager.consume_breakthrough_effects(player)
+
         # 计算成功率
         success_rate, rate_info = self.calculate_breakthrough_success_rate(player, pill_name, temp_bonus)
+        if pill_name:
+            rate_info += f"\n消耗破境丹：{pill_name}×1（突破成功或失败均消耗）"
 
         # 根据修炼类型获取对应的境界数据
         level_data = self.config_manager.get_level_data(player.cultivation_type)

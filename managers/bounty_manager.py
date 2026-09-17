@@ -11,6 +11,7 @@ from astrbot.api import logger
 
 from ..data import DataBase
 from ..models import Player
+from ..data.transaction import atomic_operation
 
 if TYPE_CHECKING:
     from ..core import StorageRingManager
@@ -321,8 +322,11 @@ class BountyManager:
             f"💡 完成后使用 /完成悬赏 领取奖励"
         )
 
+    @atomic_operation
     async def complete_bounty(self, player: Player) -> Tuple[bool, str]:
-        await self.db.conn.execute("BEGIN IMMEDIATE")
+        player = await self.db.get_player_by_id(player.user_id)
+        if not player:
+            return False, "玩家不存在或已被删除"
         try:
             active = await self.db.ext.get_active_bounty(player.user_id)
             if not active:
@@ -388,6 +392,7 @@ class BountyManager:
                         item_msg = "\n\n📦 获得物品：\n" + "\n".join(lines)
             except Exception:
                 logger.warning("悬赏物品奖励发放异常", exc_info=True)
+                raise
 
         rewards = json.loads(active["rewards"])
         diff_name = rewards.get("difficulty_name", rewards.get("difficulty", "未知"))
