@@ -10,13 +10,17 @@ class AdventureHandlers:
 
     async def handle_adventure_info(self, event: AstrMessageEvent):
         """历练信息 - 显示路线、风险与收益"""
-        routes = self.adv_mgr.get_route_overview()
+        player = await self.db.get_player_by_id(event.get_sender_id())
+        if not player:
+            yield event.plain_result("❌ 你还未踏入修仙之路！")
+            return
+        routes = self.adv_mgr.get_route_overview(player.level_index)
         lines = ["📖 历练路线总览", "━━━━━━━━━━━━━━━"]
         for route in routes:
             duration = route.get("duration", 0) // 60
             lines.append(
                 f"· {route['name']} ({route.get('risk', '未知')}风险)"
-                f"\n  - 时长：{duration} 分钟 | 推荐境界 ≥ {route.get('min_level', 0)}"
+                f"\n  - 时长：{duration} 分钟 | 进入境界：{route.get('required_level_name', route.get('min_level', 0))}"
                 f"\n  - 说明：{route.get('description', '')}"
             )
         lines.append(
