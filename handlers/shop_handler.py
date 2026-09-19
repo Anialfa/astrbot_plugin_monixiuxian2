@@ -262,6 +262,76 @@ class ShopHandler:
         ]
         yield event.plain_result("\n".join(lines))
 
+    @player_required
+    @atomic_operation
+    async def handle_sell(self, player: Player, event: AstrMessageEvent, item_name: str = ""):
+        """按基础价的一半出售储物戒物品或丹药背包中的丹药。"""
+        raw_item = item_name.strip().replace("　", " ")
+        try:
+            raw_message = event.get_message_str().strip().lstrip("/")
+            if raw_message.startswith("出售"):
+                raw_item = raw_message[len("出售"):].strip().replace("　", " ")
+        except Exception:
+            pass
+        raw_item = raw_item.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+        matched = re.match(r"^(.*?)(?:\s+(\d+)|[xX＊*]\s*(\d+))$", raw_item)
+        if matched:
+            item_name = matched.group(1).strip()
+            quantity = int(matched.group(2) or matched.group(3))
+        else:
+            item_name = raw_item.strip()
+            quantity = 1
+
+        if not item_name:
+            yield event.plain_result("请指定要出售的物品，例如：/出售 灵草 3")
+            return
+        if quantity <= 0:
+            yield event.plain_result("出售数量必须是大于 0 的整数。")
+            return
+
+        player = await self.db.get_player_by_id(player.user_id)
+        if not player:
+            yield event.plain_result("玩家不存在或已被删除。")
+            return
+        item = self.shop_manager.find_item_by_name(item_name)
+        if not item or item.get("price", 0) <= 0:
+            yield event.plain_result(f"【{item_name}】没有可用的基础售价，暂不可出售。")
+            return
+
+        unit_price = max(1, item["price"] // 2)
+        total_price = unit_price * quantity
+        pill_types = {"pill", "exp_pill", "utility_pill"}
+        if item.get("type") in pill_types:
+            inventory = player.get_pills_inventory()
+            current = inventory.get(item_name, 0)
+            if current < quantity:
+                yield event.plain_result(f"丹药背包中【{item_name}】数量不足（当前：{current}）。")
+                return
+            remaining = current - quantity
+            if remaining:
+                inventory[item_name] = remaining
+            else:
+                del inventory[item_name]
+            player.set_pills_inventory(inventory)
+        else:
+            if not self.storage_ring_manager.has_item(player, item_name, quantity):
+                current = self.storage_ring_manager.get_item_count(player, item_name)
+                yield event.plain_result(f"储物戒中【{item_name}】数量不足（当前：{current}）。")
+                return
+            success, message = await self.storage_ring_manager.retrieve_item(player, item_name, quantity)
+            if not success:
+                yield event.plain_result(f"出售失败：{message}")
+                return
+
+        player.gold += total_price
+        await self.db.update_player(player)
+        yield event.plain_result(
+            f"✅ 已出售【{item_name}】×{quantity}\n"
+            f"基础单价：{item['price']:,} 灵石 | 出售单价：{unit_price:,} 灵石\n"
+            f"获得灵石：+{total_price:,}\n"
+            f"当前灵石：{player.gold:,}"
+        )
+
     async def _apply_legacy_pill_effects(self, player: Player, item: dict, quantity: int) -> tuple:
         """应用旧系统丹药效果（items.json中的丹药）
 

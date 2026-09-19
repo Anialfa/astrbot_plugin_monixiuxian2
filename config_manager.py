@@ -23,6 +23,7 @@ class ConfigManager:
         self.exp_pills_data: Dict[str, dict] = {}  # 修为丹数据，key为丹药名称
         self.utility_pills_data: Dict[str, dict] = {}  # 功能丹数据，key为丹药名称
         self.storage_rings_data: Dict[str, dict] = {}  # 储物戒数据，key为储物戒名称
+        self.materials_data: Dict[str, dict] = {}  # 材料图鉴，key为材料名称
         
         # 新增系统配置
         self.sect_config: Dict[str, Any] = {}
@@ -44,7 +45,8 @@ class ConfigManager:
 
     def _validate_overrides(self):
         item_files = {"items.json", "weapons.json", "pills.json", "exp_pills.json",
-                      "utility_pills.json", "storage_rings.json", "alchemy_recipes.json"}
+                      "utility_pills.json", "storage_rings.json", "alchemy_recipes.json",
+                      "material_catalog.json"}
         list_files = {"level_config.json", "body_level_config.json"}
         for path in self.override_dir.glob("*.json"):
             try:
@@ -130,6 +132,7 @@ class ConfigManager:
         self.exp_pills_data = self._load_items_data(config_path("exp_pills.json"))
         self.utility_pills_data = self._load_items_data(config_path("utility_pills.json"))
         self.storage_rings_data = self._load_items_data(config_path("storage_rings.json"))
+        self.materials_data = self._load_items_data(config_path("material_catalog.json"))
         
         # 加载新系统配置
         self.sect_config = self._load_config_with_default(config_path("sect_config.json"), SECT_CONFIG)

@@ -12,6 +12,13 @@ from ..models import Item
 class ShopManager:
     """商店管理器，负责商店物品生成、刷新和购买"""
 
+    MATERIAL_BASE_PRICES = {
+        "灵草": 20, "血灵草": 80, "冰心草": 240, "火焰花": 700,
+        "九叶灵芝": 2000, "精铁": 100, "灵石碎片": 10, "玄铁": 400,
+        "灵兽毛皮": 100, "妖兽精血": 150, "星辰石": 800, "灵兽内丹": 1200,
+        "功法残页": 600, "秘境精华": 1200, "天材地宝": 3000, "混沌精华": 10000,
+    }
+
     def __init__(self, config: AstrBotConfig, config_manager: ConfigManager):
         self.config = config
         self.config_manager = config_manager
@@ -347,6 +354,13 @@ class ShopManager:
 
     def find_item_by_name(self, name: str) -> Optional[Dict]:
         """根据名称查找物品"""
+        for material in getattr(self.config_manager, 'materials_data', {}).values():
+            if material['name'] == name:
+                base_price = material.get('price', self.MATERIAL_BASE_PRICES.get(name, 0))
+                return {
+                    'name': material['name'], 'type': 'material', 'price': base_price,
+                    'rank': material.get('rank', '凡品'), 'data': material
+                }
         for weapon in self.config_manager.weapons_data.values():
             if weapon['name'] == name and weapon.get('price', 0) > 0:
                 return {'name': weapon['name'], 'type': 'weapon', 'price': weapon['price'], 'rank': weapon.get('rank', '凡品'), 'data': weapon}
@@ -483,14 +497,31 @@ class ShopManager:
 
         details = [f"名称: {item_data['name']}"]
         details.append(f"品级: {item_data['rank']}")
-        details.append(f"价格: {item_data['price']} 灵石")
+        if item_type != 'material' or item_data.get('price', 0) > 0:
+            details.append(f"价格: {item_data['price']} 灵石")
 
         description = data.get('description')
         if description:
             details.append(f"描述: {description}")
 
+        # 材料图鉴
+        if item_type == 'material':
+            category = data.get('category')
+            if category:
+                details.append(f"类别: {category}")
+            sources = data.get('sources', [])
+            if isinstance(sources, str):
+                sources = [sources]
+            if sources:
+                details.append(f"获取途径: {'；'.join(sources)}")
+            usages = data.get('usages', [])
+            if isinstance(usages, str):
+                usages = [usages]
+            if usages:
+                details.append(f"用途: {'；'.join(usages)}")
+
         # 武器/防具/饰品属性
-        if item_type in ['weapon', 'armor', 'accessory']:
+        elif item_type in ['weapon', 'armor', 'accessory']:
             attrs = []
             if data.get('magic_damage', 0) > 0:
                 attrs.append(f"法伤+{data['magic_damage']}")

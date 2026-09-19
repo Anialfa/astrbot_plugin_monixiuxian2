@@ -10,10 +10,10 @@ __all__ = ["SpiritEyeManager"]
 
 # 灵眼配置
 SPIRIT_EYE_TYPES = {
-    1: {"name": "下品灵眼", "exp_per_hour": 500, "spawn_rate": 50},
-    2: {"name": "中品灵眼", "exp_per_hour": 2000, "spawn_rate": 30},
-    3: {"name": "上品灵眼", "exp_per_hour": 8000, "spawn_rate": 15},
-    4: {"name": "极品灵眼", "exp_per_hour": 30000, "spawn_rate": 5},
+    1: {"name": "下品灵眼", "exp_per_hour": 500, "spawn_rate": 40},
+    2: {"name": "中品灵眼", "exp_per_hour": 2000, "spawn_rate": 33},
+    3: {"name": "上品灵眼", "exp_per_hour": 8000, "spawn_rate": 20},
+    4: {"name": "极品灵眼", "exp_per_hour": 30000, "spawn_rate": 7},
 }
 
 
