@@ -1593,13 +1593,13 @@
     {
         "id": "util_120",
         "name": "破劫丹",
-        "description": "永久降低突破死亡概率-50%",
+        "description": "永久降低突破跌境概率-50%",
         "rank": "仙品",
         "subtype": "permanent_attribute",
         "required_level_index": 31,
         "price": 800000,
         "effect_type": "permanent",
-        "death_protection_multiplier": 0.5,
+        "regression_protection_multiplier": 0.5,
         "shop_weight": 5
     },
     {

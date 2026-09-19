@@ -3,7 +3,7 @@
 <p align="center">
   <img src="logo.png" alt="模拟修仙" width="200">
 </p>
-> **版本:** v3.1.10<br>
+> **版本:** v3.1.11<br>
 > **许可证:** AGPL-3.0  
 > **作者:** xiaojuwa  
 > **Fork 维护:** [wearshoes/astrbot_plugin_monixiuxian2](https://github.com/wearshoes/astrbot_plugin_monixiuxian2)<br>
@@ -17,6 +17,12 @@
 ---
 
 ## 🌟 特色功能
+
+### v3.1.11 突破跌境机制（2026-09-19）
+
+- 移除突破失败时的走火入魔、角色死亡、数据清除及回生丹触发逻辑。
+- 保留原先每次失败随机 1%～10% 的风险区间：触发时角色跌落一个境界；未触发时仅损失 10% 修为。
+- 配置项更名为 `BREAKTHROUGH_REGRESSION_PROBABILITY`；破劫丹改为永久降低突破跌境概率，已服用旧版破劫丹的存档效果会继续生效。
 
 ### v3.1.10 批量种植与服丹参数修复（2026-09-17）
 

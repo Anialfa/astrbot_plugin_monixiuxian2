@@ -422,13 +422,13 @@ class PillManager:
             permanent_gains[level_key]["cultivation_multiplier"] += cult_mult
             gains_applied["修炼速度"] = f"{cult_mult:+.0%}"
 
-        # 处理突破死亡概率降低
-        if "death_protection_multiplier" in pill_data:
-            death_mult = pill_data["death_protection_multiplier"]
-            if "death_protection_multiplier" not in permanent_gains[level_key]:
-                permanent_gains[level_key]["death_protection_multiplier"] = 1.0
-            permanent_gains[level_key]["death_protection_multiplier"] *= death_mult
-            gains_applied["突破死亡概率"] = f"降低{(1 - death_mult) * 100:.0f}%"
+        # 处理突破跌境概率降低
+        if "regression_protection_multiplier" in pill_data:
+            regression_mult = pill_data["regression_protection_multiplier"]
+            if "regression_protection_multiplier" not in permanent_gains[level_key]:
+                permanent_gains[level_key]["regression_protection_multiplier"] = 1.0
+            permanent_gains[level_key]["regression_protection_multiplier"] *= regression_mult
+            gains_applied["突破跌境概率"] = f"降低{(1 - regression_mult) * 100:.0f}%"
 
         if not gains_applied:
             return False, "该丹药的所有属性增益都已达到上限，无法使用！"
@@ -685,12 +685,16 @@ class PillManager:
         permanent_multiplier = 1.0
         permanent_gains = player.get_permanent_pill_gains()
         for level_gain in permanent_gains.values():
-            permanent_multiplier *= level_gain.get("death_protection_multiplier", 1.0)
+            # 兼容已服用旧版破劫丹的玩家数据。
+            permanent_multiplier *= level_gain.get(
+                "regression_protection_multiplier",
+                level_gain.get("death_protection_multiplier", 1.0),
+            )
 
         return {
             "temp_bonus": temp_bonus,
             "has_temp_effects": has_temp_effects,
-            "permanent_death_multiplier": max(0.0, min(1.0, permanent_multiplier)),
+            "permanent_regression_multiplier": max(0.0, min(1.0, permanent_multiplier)),
         }
 
     async def consume_breakthrough_effects(self, player: Player):
@@ -821,6 +825,8 @@ class PillManager:
 
             if "cultivation_multiplier" in gain:
                 gain["cultivation_multiplier"] = 0
+            if "regression_protection_multiplier" in gain:
+                gain["regression_protection_multiplier"] = 1.0
             if "death_protection_multiplier" in gain:
                 gain["death_protection_multiplier"] = 1.0
 
