@@ -19,14 +19,14 @@ class AdventureHandlers:
         for route in routes:
             duration = route.get("duration", 0) // 60
             lines.append(
-                f"· {route['name']} ({route.get('risk', '未知')}风险)"
+                f"· 【ID {route['route_id']}】{route['name']} ({route.get('risk', '未知')}风险)"
                 f"\n  - 时长：{duration} 分钟 | 进入境界：{route.get('required_level_name', route.get('min_level', 0))}"
                 f"\n  - 说明：{route.get('description', '')}"
             )
         lines.append(
             "\n💡 指令用法：\n"
-            "  /开始历练 巡山问道\n"
-            "  /开始历练 猎魔肃清\n"
+            "  /开始历练 1\n"
+            "  /开始历练 3\n"
             "  /历练状态 → 查看当前进度\n"
             "  /完成历练 → 领取奖励"
         )

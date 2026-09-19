@@ -27,6 +27,7 @@ class AdventureManager:
     DEFAULT_CONFIG = {
         "routes": [
             {
+                "route_id": 1,
                 "key": "scout",
                 "name": "巡山问道",
                 "aliases": ["短途", "巡山"],
@@ -100,7 +101,7 @@ class AdventureManager:
         self.config_manager = config_manager
         self._route_cooldowns: Dict[str, Dict[str, int]] = {}
         self.routes: Dict[str, dict] = {}
-        self.route_alias_index: Dict[str, str] = {}
+        self.route_id_index: Dict[int, str] = {}
         self.event_groups: Dict[str, List[dict]] = {}
         self.drop_tables: Dict[str, List[dict]] = {}
         self.special_events: List[dict] = []
@@ -112,23 +113,26 @@ class AdventureManager:
     def reload_config(self):
         """重新加载配置文件"""
         config = self._load_config_file()
-        self.routes = {route["key"]: route for route in config.get("routes", [])}
+        self.routes = {}
+        self.route_id_index = {}
+        for route in config.get("routes", []):
+            key = route.get("key")
+            if not isinstance(key, str) or not key:
+                logger.error("发现缺少 key 的历练路线，已忽略。")
+                continue
+            route_id = route.get("route_id")
+            if not isinstance(route_id, int) or route_id <= 0:
+                logger.error(f"历练路线 {key} 缺少有效 route_id，已忽略。")
+                continue
+            if route_id in self.route_id_index:
+                logger.error(f"历练路线 ID {route_id} 重复，路线 {key} 已忽略。")
+                continue
+            if key in self.routes:
+                logger.error(f"历练路线 key {key} 重复，已忽略。")
+                continue
+            self.routes[key] = route
+            self.route_id_index[route_id] = key
         self.default_route_key = next(iter(self.routes.keys()), "scout")
-
-        self.route_alias_index = {}
-        for key, route in self.routes.items():
-            aliases = set(route.get("aliases", []))
-            aliases.add(route["key"])
-            aliases.add(route["name"])
-            # 兼容旧指令
-            if route["key"] == "scout":
-                aliases.update({"short", "短途"})
-            elif route["key"] == "journey":
-                aliases.update({"medium", "中途"})
-            elif route["key"] == "peril":
-                aliases.update({"long", "长途"})
-            for alias in aliases:
-                self.route_alias_index[alias.lower()] = key
 
         self.event_groups = config.get("event_groups", self.DEFAULT_CONFIG["event_groups"])
         self.drop_tables = config.get("drop_tables", self.DEFAULT_CONFIG["drop_tables"])
@@ -149,11 +153,12 @@ class AdventureManager:
     def get_route_overview(self, player_level: Optional[int] = None) -> List[dict]:
         """暴露给指令层的路线概览"""
         overview = []
-        for route in self.routes.values():
+        for route in sorted(self.routes.values(), key=lambda item: item.get("route_id", float("inf"))):
             if player_level is not None and player_level < route.get("visible_level", 0):
                 continue
             overview.append(
                 {
+                    "route_id": route["route_id"],
                     "key": route["key"],
                     "name": route["name"],
                     "risk": route.get("risk", "未知"),
@@ -185,7 +190,7 @@ class AdventureManager:
         route_key = self._resolve_route(route_token)
         route = self.routes.get(route_key)
         if not route:
-            return False, "❌ 未找到对应的历练路线，请先发送 /历练信息 查看可选路线。"
+            return False, "❌ 历练路线 ID 无效，请先发送 /历练信息 查看可选路线。"
 
         if player.level_index < route.get("visible_level", 0):
             return False, "❌ 你当前境界尚不足以发现这条历练路线！"
@@ -203,12 +208,12 @@ class AdventureManager:
 
         duration = route.get("duration", 3600)
         scheduled_time = now + duration
-        extra = {"route_key": route_key}
+        extra = {"route_key": route_key, "route_id": route["route_id"]}
         await self.db.ext.set_user_busy(user_id, UserStatus.ADVENTURING, scheduled_time, extra_data=extra)
 
         fatigue = route.get("fatigue_cooldown", 0)
         hint = [
-            f"✨ 你选择了「{route['name']}」——{route.get('description', '未知冒险')}",
+            f"✨ 你选择了【历练 ID {route['route_id']}】「{route['name']}」——{route.get('description', '未知冒险')}",
             f"路线风险：{route.get('risk', '未知')} | 历练时长：{duration // 60} 分钟"
         ]
         if route.get("min_level", 0):
@@ -348,10 +353,11 @@ class AdventureManager:
     # -------- 内部工具 --------
 
     def _resolve_route(self, token: str) -> str:
-        if not token:
-            return self.default_route_key
-        normalized = token.strip().lower()
-        return self.route_alias_index.get(normalized, self.default_route_key)
+        """仅通过路线 ID 选择历练路线，避免同名或别名产生歧义。"""
+        normalized = token.strip()
+        if not normalized.isdigit():
+            return ""
+        return self.route_id_index.get(int(normalized), "")
 
     def _get_level_name(self, level_index: int) -> str:
         """以灵修境界名称展示跨玩法的等级门槛。"""

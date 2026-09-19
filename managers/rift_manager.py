@@ -129,6 +129,7 @@ class RiftManager:
 
         rifts = await self.db.ext.get_all_rifts()
         rifts = [rift for rift in rifts if player.level_index >= rift.visible_level]
+        rifts.sort(key=lambda rift: rift.rift_id)
         
         if not rifts:
             return False, "❌ 当前没有开放的秘境！"

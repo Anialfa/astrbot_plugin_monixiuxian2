@@ -555,9 +555,7 @@ class ShopManager:
 
             elif item_type == 'utility_pill':
                 effect_type = data.get('effect_type', '')
-                if subtype == 'resurrection':
-                    effect_desc.append("死亡时自动复活（属性减半）")
-                elif effect_type == 'temporary':
+                if effect_type == 'temporary':
                     duration = data.get('duration_minutes', 0)
                     mult = data.get('cultivation_multiplier', 0)
                     if mult > 0:

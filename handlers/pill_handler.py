@@ -128,17 +128,10 @@ class PillHandler:
 
                     effects_display.append(f"🌟 {pill_name} (剩余: {time_str})")
 
-        # 检查回生丹状态
-        resurrection_status = ""
-        if player.has_resurrection_pill:
-            resurrection_status = "\n🛡️ 当前拥有回生丹效果（可抵消一次死亡）"
-
         # 组合显示
         full_message = inventory_display
         if effects_display:
             full_message += "\n" + "\n".join(effects_display)
-        if resurrection_status:
-            full_message += resurrection_status
 
         yield event.plain_result(full_message)
 
@@ -205,7 +198,6 @@ class PillHandler:
         """获取丹药子类型的显示名称"""
         subtype_map = {
             "exp": "修为丹",
-            "resurrection": "回生丹",
             "cultivation_boost": "修炼加速",
             "permanent_attribute": "永久属性",
             "combat_boost": "战斗增益",
@@ -227,9 +219,6 @@ class PillHandler:
         if subtype == "exp":
             exp_gain = pill_data.get('exp_gain', 0)
             lines.append(f"  增加修为：{exp_gain}")
-
-        elif subtype == "resurrection":
-            lines.append("  抵消一次死亡，复活后属性减半")
 
         elif effect_type == "temporary":
             duration = pill_data.get('duration_minutes', 0)

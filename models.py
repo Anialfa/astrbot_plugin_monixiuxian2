@@ -110,7 +110,7 @@ class Player:
     # 丹药系统字段
     active_pill_effects: str = "[]"  # 当前生效的临时丹药效果（JSON字符串）
     permanent_pill_gains: str = "{}"  # 永久丹药累积增益（JSON字符串）
-    has_resurrection_pill: bool = False  # 是否拥有回生丹效果
+    has_resurrection_pill: bool = False  # 历史存档兼容字段，v3.1.12 起不再使用
     has_debuff_shield: bool = False  # 是否拥有一次负面效果免疫
     pills_inventory: str = "{}"  # 丹药背包（JSON字符串，格式：{pill_id: count}）
 

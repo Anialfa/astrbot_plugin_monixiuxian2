@@ -297,7 +297,7 @@ class DatabaseExtended:
     async def get_all_rifts(self) -> List[Rift]:
         """获取所有秘境"""
         async with self.conn.execute(
-            "SELECT * FROM rifts ORDER BY rift_level ASC"
+            "SELECT * FROM rifts ORDER BY rift_id ASC"
         ) as cursor:
             rows = await cursor.fetchall()
             return [Rift(**dict(row)) for row in rows]

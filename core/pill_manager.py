@@ -161,8 +161,6 @@ class PillManager:
         for _ in range(quantity):
             if subtype == "exp":
                 success, message = await self._use_exp_pill(player, pill_name, pill_data)
-            elif subtype == "resurrection":
-                success, message = await self._use_resurrection_pill(player, pill_name, pill_data)
             elif effect_type == "temporary":
                 success, message = await self._use_temporary_pill(player, pill_name, pill_data)
             elif effect_type == "permanent":
@@ -200,31 +198,6 @@ class PillManager:
             f"━━━━━━━━━━━━━━━\n"
             f"📈 获得修为：{exp_gain}\n"
             f"💫 当前修为：{player.experience}\n"
-            f"━━━━━━━━━━━━━━━"
-        )
-
-    async def _use_resurrection_pill(self, player: Player, pill_name: str, pill_data: dict) -> Tuple[bool, str]:
-        """使用回生丹"""
-        if player.has_resurrection_pill:
-            return False, "你已经拥有回生丹效果，无需重复使用！"
-
-        player.has_resurrection_pill = True
-
-        # 扣除丹药
-        inventory = player.get_pills_inventory()
-        inventory[pill_name] -= 1
-        if inventory[pill_name] <= 0:
-            del inventory[pill_name]
-        player.set_pills_inventory(inventory)
-
-        await self.db.update_player(player)
-
-        return True, (
-            f"✨ 服用【{pill_name}】成功！\n"
-            f"━━━━━━━━━━━━━━━\n"
-            f"🛡️ 你获得了起死回生的能力\n"
-            f"下次死亡时将自动复活\n"
-            f"（复活后所有属性减半）\n"
             f"━━━━━━━━━━━━━━━"
         )
 
@@ -580,41 +553,6 @@ class PillManager:
             "max_spiritual_qi": level_config.get("breakthrough_spiritual_qi_gain", 100),
             "max_blood_qi": level_config.get("breakthrough_blood_qi_gain", 100),
         }
-
-    async def handle_resurrection(self, player: Player) -> bool:
-        """处理玩家死亡时的回生丹效果
-
-        Args:
-            player: 玩家对象
-
-        Returns:
-            是否成功复活
-        """
-        if not player.has_resurrection_pill:
-            return False
-
-        logger.info(f"玩家 {player.user_id} 触发回生丹效果")
-
-        # 消耗回生丹效果
-        player.has_resurrection_pill = False
-
-        # 所有属性减半
-        player.lifespan = player.lifespan // 2
-        player.experience = player.experience // 2
-        player.physical_damage = player.physical_damage // 2
-        player.magic_damage = player.magic_damage // 2
-        player.physical_defense = player.physical_defense // 2
-        player.magic_defense = player.magic_defense // 2
-        player.mental_power = player.mental_power // 2
-        player.max_spiritual_qi = player.max_spiritual_qi // 2
-        player.spiritual_qi = player.max_spiritual_qi // 2
-        player.max_blood_qi = player.max_blood_qi // 2
-        player.blood_qi = player.max_blood_qi // 2
-
-        self._ensure_non_negative_attributes(player)
-
-        await self.db.update_player(player)
-        return True
 
     def calculate_pill_attribute_effects(self, player: Player) -> dict:
         """计算丹药对属性的影响（乘法加成）

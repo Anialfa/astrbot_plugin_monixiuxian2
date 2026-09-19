@@ -1,11 +1,13 @@
 # data/migration.py
 
+import json
+
 import aiosqlite
 from typing import Dict, Callable, Awaitable
 from astrbot.api import logger
 from ..config_manager import ConfigManager
 
-LATEST_DB_VERSION = 22  # v22: 扩展秘境奖励平衡
+LATEST_DB_VERSION = 24  # v24: 重平衡扩展秘境奖励
 
 MIGRATION_TASKS: Dict[int, Callable[[aiosqlite.Connection, ConfigManager], Awaitable[None]]] = {}
 
@@ -1056,3 +1058,74 @@ async def _migrate_to_v22(conn: aiosqlite.Connection, config_manager: ConfigMana
 
     await conn.commit()
     logger.info("v22迁移完成：已重平衡10个扩展秘境奖励")
+
+
+@migration(23)
+async def _migrate_to_v23(conn: aiosqlite.Connection, config_manager: ConfigManager):
+    """迁移到v23 - 清除已废弃的回生丹库存与生效标记。"""
+    logger.info("开始迁移到v23：清除回生丹遗留数据")
+
+    async with conn.execute("PRAGMA table_info(players)") as cursor:
+        columns = {row[1] for row in await cursor.fetchall()}
+
+    if "pills_inventory" not in columns:
+        logger.info("v23迁移跳过：玩家表尚无丹药背包字段")
+        return
+
+    has_effect_flag = "has_resurrection_pill" in columns
+    async with conn.execute("SELECT user_id, pills_inventory FROM players") as cursor:
+        players = await cursor.fetchall()
+
+    removed_count = 0
+    for user_id, inventory_raw in players:
+        try:
+            inventory = json.loads(inventory_raw or "{}")
+        except (TypeError, json.JSONDecodeError):
+            logger.warning(f"玩家 {user_id} 的丹药背包数据异常，跳过回生丹库存清理")
+            continue
+        if not isinstance(inventory, dict):
+            continue
+
+        removed = False
+        for pill_name in ("回生丹", "涅槃重生丹"):
+            if pill_name in inventory:
+                inventory.pop(pill_name)
+                removed = True
+        if removed:
+            removed_count += 1
+            await conn.execute(
+                "UPDATE players SET pills_inventory = ? WHERE user_id = ?",
+                (json.dumps(inventory, ensure_ascii=False), user_id),
+            )
+
+    if has_effect_flag:
+        await conn.execute("UPDATE players SET has_resurrection_pill = 0")
+    await conn.commit()
+    logger.info(f"v23迁移完成：清理了 {removed_count} 名玩家的回生丹库存")
+
+
+@migration(24)
+async def _migrate_to_v24(conn: aiosqlite.Connection, config_manager: ConfigManager):
+    """迁移到v24 - 重平衡扩展秘境的基础奖励。"""
+    logger.info("开始迁移到v24：重平衡扩展秘境奖励")
+
+    balanced_rewards = {
+        6: {"exp": [11000, 28000], "gold": [4400, 15000]},
+        7: {"exp": [12000, 32000], "gold": [5000, 17000]},
+        8: {"exp": [15000, 42000], "gold": [7000, 23000]},
+        9: {"exp": [14000, 38000], "gold": [6000, 20000]},
+        10: {"exp": [17000, 48000], "gold": [8000, 27000]},
+        11: {"exp": [19000, 54000], "gold": [9000, 31000]},
+        12: {"exp": [22000, 64000], "gold": [11000, 38000]},
+        13: {"exp": [25000, 74000], "gold": [13000, 44000]},
+        14: {"exp": [29000, 86000], "gold": [15000, 52000]},
+        15: {"exp": [34000, 100000], "gold": [18000, 60000]},
+    }
+    for rift_id, rewards in balanced_rewards.items():
+        await conn.execute(
+            "UPDATE rifts SET rewards = ? WHERE rift_id = ?",
+            (json.dumps(rewards, ensure_ascii=False), rift_id),
+        )
+
+    await conn.commit()
+    logger.info("v24迁移完成：已按新版曲线更新扩展秘境奖励")
