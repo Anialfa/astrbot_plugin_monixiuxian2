@@ -1,29 +1,5 @@
 [
     {
-        "id": "util_001",
-        "name": "回生丹",
-        "description": "传说级丹药，可抵消一次死亡，但复活后属性减半",
-        "rank": "仙品",
-        "subtype": "resurrection",
-        "required_level_index": 0,
-        "price": 1000000,
-        "effect_type": "instant",
-        "resurrects": true,
-        "shop_weight": 5
-    },
-    {
-        "id": "util_002",
-        "name": "涅槃重生丹",
-        "description": "混元先天丹药，可抵消一次死亡，复活后属性减半",
-        "rank": "混元先天",
-        "subtype": "resurrection",
-        "required_level_index": 0,
-        "price": 5000000,
-        "effect_type": "instant",
-        "resurrects": true,
-        "shop_weight": 1
-    },
-    {
         "id": "util_003",
         "name": "修炼加速丹",
         "description": "临时提升修炼速度50%，持续1小时",
@@ -1593,13 +1569,13 @@
     {
         "id": "util_120",
         "name": "破劫丹",
-        "description": "永久降低突破死亡概率-50%",
+        "description": "永久降低突破跌境概率-50%",
         "rank": "仙品",
         "subtype": "permanent_attribute",
         "required_level_index": 31,
         "price": 800000,
         "effect_type": "permanent",
-        "death_protection_multiplier": 0.5,
+        "regression_protection_multiplier": 0.5,
         "shop_weight": 5
     },
     {

@@ -26,6 +26,7 @@ class BountyHandlers:
             lines.append(
                 f"[{b['id']}] {b['name']}（{b.get('difficulty_name', '未知')}·{b.get('category', '任务')}）\n"
                 f"  - 目标：完成 {b.get('count')} 次 | 时限：{b.get('time_limit', 0) // 60} 分钟\n"
+                f"  - 可通过：{b.get('sources', '【暂无明确来源】')}完成\n"
                 f"  - 奖励：{reward.get('stone', 0):,} 灵石 + {reward.get('exp', 0):,} 修为\n"
                 f"  - 说明：{b.get('description', '')}"
             )

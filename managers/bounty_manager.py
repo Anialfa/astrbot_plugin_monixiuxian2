@@ -115,7 +115,8 @@ class BountyManager:
                     continue
                 metadata = {
                     "duration": int(route.get("duration", 3600)),
-                    "fatigue": int(route.get("fatigue_cooldown", 0))
+                    "fatigue": int(route.get("fatigue_cooldown", 0)),
+                    "route_id": int(route.get("route_id", 0)),
                 }
                 self.adventure_tag_meta[tag] = metadata
                 self.adventure_tag_meta[f"adventure:{route_key}"] = metadata
@@ -150,6 +151,7 @@ class BountyManager:
             if entry:
                 bounties.append(entry)
 
+        bounties.sort(key=lambda bounty: bounty["id"])
         self._set_cached_bounties(player.user_id, bounties)
         return bounties
 
@@ -202,8 +204,27 @@ class BountyManager:
             "reward": reward,
             "time_limit": time_limit,
             "progress_tags": progress_tags,
+            "sources": self.format_bounty_sources(progress_tags),
             "item_table": template.get("item_table", "gather")
         }
+
+    def format_bounty_sources(self, progress_tags: List[str]) -> str:
+        """将悬赏进度标签转换为玩家可直接执行的副本入口。"""
+        sources = []
+        for tag in progress_tags:
+            normalized = str(tag).strip().lower()
+            if normalized.startswith("rift:"):
+                rift_id = normalized.removeprefix("rift:")
+                if rift_id.isdigit() and int(rift_id) > 0:
+                    sources.append(f"【秘境 ID {int(rift_id)}】")
+                    continue
+            metadata = self.adventure_tag_meta.get(normalized)
+            if metadata and metadata.get("route_id", 0) > 0:
+                sources.append(f"【历练 ID {metadata['route_id']}】")
+                continue
+            logger.warning(f"悬赏进度标签缺少可展示来源：{tag}")
+            sources.append(f"【未配置来源：{tag}】")
+        return "、".join(sources) if sources else "【暂无明确来源】"
 
     def _calculate_reward(self, template: dict, diff_cfg: dict, player: Player, target: int) -> Dict[str, int]:
         base_reward = template.get("reward", {"stone": 200, "exp": 2000})

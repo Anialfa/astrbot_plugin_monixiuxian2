@@ -63,7 +63,7 @@
       "min_target": 2,
       "max_target": 4,
       "time_limit": 5400,
-      "reward": { "stone": 360, "exp": 3000 },
+      "reward": { "stone": 880, "exp": 3600 },
       "item_table": "gather",
       "description": "在宗门外的安全区域采集药材，补充基础储备。",
       "weight": 25
@@ -153,7 +153,7 @@
       "min_target": 1,
       "max_target": 2,
       "time_limit": 7200,
-      "reward": { "stone": 1200, "exp": 10000 },
+      "reward": { "stone": 2200, "exp": 8800 },
       "item_table": "explore",
       "description": "探查星海遗迹外围，回收可供宗门研究的古老线索。",
       "weight": 15
@@ -168,7 +168,7 @@
       "min_target": 1,
       "max_target": 2,
       "time_limit": 7200,
-      "reward": { "stone": 1800, "exp": 15000 },
+      "reward": { "stone": 2800, "exp": 11200 },
       "item_table": "hunt",
       "description": "深入血色禁地清除游荡妖物，带回其中的异常情报。",
       "weight": 15
@@ -183,7 +183,7 @@
       "min_target": 1,
       "max_target": 2,
       "time_limit": 9000,
-      "reward": { "stone": 4200, "exp": 36000 },
+      "reward": { "stone": 4800, "exp": 19200 },
       "item_table": "mystic",
       "description": "在虚天殿内外圈搜集传承线索，规避殿内残存禁制。",
       "weight": 15
@@ -198,7 +198,7 @@
       "min_target": 1,
       "max_target": 2,
       "time_limit": 10800,
-      "reward": { "stone": 8000, "exp": 70000 },
+      "reward": { "stone": 7200, "exp": 28800 },
       "item_table": "mystic",
       "description": "镇压坠魔谷与封魔之渊逸散的煞气，任务风险极高。",
       "weight": 20
@@ -213,7 +213,7 @@
       "min_target": 1,
       "max_target": 2,
       "time_limit": 12600,
-      "reward": { "stone": 15000, "exp": 135000 },
+      "reward": { "stone": 10000, "exp": 40000 },
       "item_table": "mystic",
       "description": "协助加固昆吾山封印，只有高阶修士方能承受其中威压。",
       "weight": 20

@@ -1,6 +1,7 @@
 {
   "routes": [
     {
+      "route_id": 1,
       "key": "scout",
       "name": "巡山问道",
       "aliases": ["短途", "巡山", "巡山问道", "巡逻"],
@@ -27,6 +28,7 @@
       "bounty_progress": 1
     },
     {
+      "route_id": 2,
       "key": "journey",
       "name": "云游四方",
       "aliases": ["中途", "游历", "云游"],
@@ -53,6 +55,7 @@
       "bounty_progress": 1
     },
     {
+      "route_id": 3,
       "key": "hunt",
       "name": "猎魔肃清",
       "aliases": ["猎魔", "肃清", "长途"],
@@ -80,6 +83,7 @@
       "bounty_progress": 2
     },
     {
+      "route_id": 4,
       "key": "peril",
       "name": "九死一生",
       "aliases": ["绝境", "九死", "险行"],
@@ -107,6 +111,7 @@
       "bounty_progress": 3
     },
     {
+      "route_id": 5,
       "key": "market_scam",
       "name": "坊市骗局",
       "aliases": ["坊市", "骗局"],
@@ -120,13 +125,14 @@
       "base_gold_per_min": 20,
       "level_bonus_exp": 14,
       "level_bonus_gold": 5,
-      "completion_bonus": {"exp": 500, "gold": 300},
+      "completion_bonus": {"exp": 2946, "gold": 1345},
       "event_weights": {"safe": 50, "standard": 40, "risky": 10},
       "drop_tier": "low",
       "bounty_tag": "adventure_scout",
       "bounty_progress": 1
     },
     {
+      "route_id": 6,
       "key": "sect_duel",
       "name": "同门斗法",
       "aliases": ["斗法", "同门"],
@@ -140,13 +146,14 @@
       "base_gold_per_min": 18,
       "level_bonus_exp": 16,
       "level_bonus_gold": 5,
-      "completion_bonus": {"exp": 700, "gold": 350},
+      "completion_bonus": {"exp": 4324, "gold": 1655},
       "event_weights": {"safe": 30, "standard": 50, "risky": 20},
       "drop_tier": "mid",
       "bounty_tag": "adventure_roam",
       "bounty_progress": 1
     },
     {
+      "route_id": 7,
       "key": "sect_tournament",
       "name": "宗门小比",
       "aliases": ["小比", "宗门比试"],
@@ -160,13 +167,14 @@
       "base_gold_per_min": 22,
       "level_bonus_exp": 20,
       "level_bonus_gold": 6,
-      "completion_bonus": {"exp": 1000, "gold": 500},
+      "completion_bonus": {"exp": 6360, "gold": 2118},
       "event_weights": {"safe": 25, "standard": 50, "risky": 25},
       "drop_tier": "mid",
       "bounty_tag": "adventure_hunt",
       "bounty_progress": 1
     },
     {
+      "route_id": 8,
       "key": "ancient_cave",
       "name": "古修洞府现世",
       "aliases": ["古修洞府", "洞府"],
@@ -180,13 +188,14 @@
       "base_gold_per_min": 28,
       "level_bonus_exp": 26,
       "level_bonus_gold": 8,
-      "completion_bonus": {"exp": 1800, "gold": 900},
+      "completion_bonus": {"exp": 9287, "gold": 3416},
       "event_weights": {"safe": 20, "standard": 40, "risky": 30, "disaster": 10},
       "drop_tier": "mid",
       "bounty_tag": "adventure_hunt",
       "bounty_progress": 2
     },
     {
+      "route_id": 9,
       "key": "spirit_vein",
       "name": "灵脉争夺",
       "aliases": ["灵脉", "争夺"],
@@ -200,13 +209,14 @@
       "base_gold_per_min": 36,
       "level_bonus_exp": 32,
       "level_bonus_gold": 10,
-      "completion_bonus": {"exp": 3000, "gold": 1500},
+      "completion_bonus": {"exp": 13352, "gold": 5320},
       "event_weights": {"safe": 15, "standard": 40, "risky": 35, "disaster": 10},
       "drop_tier": "high",
       "bounty_tag": "adventure_hunt",
       "bounty_progress": 2
     },
     {
+      "route_id": 10,
       "key": "nascent_seizure",
       "name": "元婴夺舍",
       "aliases": ["夺舍", "元婴夺舍"],
@@ -220,13 +230,14 @@
       "base_gold_per_min": 46,
       "level_bonus_exp": 40,
       "level_bonus_gold": 13,
-      "completion_bonus": {"exp": 5000, "gold": 2600},
+      "completion_bonus": {"exp": 19050, "gold": 8535},
       "event_weights": {"safe": 10, "standard": 30, "risky": 40, "disaster": 20},
       "drop_tier": "high",
       "bounty_tag": "adventure_peril",
       "bounty_progress": 2
     },
     {
+      "route_id": 11,
       "key": "early_tribulation",
       "name": "天劫提前",
       "aliases": ["天劫", "提前天劫"],
@@ -240,13 +251,14 @@
       "base_gold_per_min": 60,
       "level_bonus_exp": 52,
       "level_bonus_gold": 16,
-      "completion_bonus": {"exp": 8500, "gold": 4300},
+      "completion_bonus": {"exp": 26918, "gold": 13244},
       "event_weights": {"safe": 10, "standard": 25, "risky": 40, "disaster": 25},
       "drop_tier": "high",
       "bounty_tag": "adventure_peril",
       "bounty_progress": 3
     },
     {
+      "route_id": 12,
       "key": "mysterious_fragment",
       "name": "神秘残片",
       "aliases": ["残片", "神秘残片"],
@@ -260,13 +272,14 @@
       "base_gold_per_min": 78,
       "level_bonus_exp": 66,
       "level_bonus_gold": 21,
-      "completion_bonus": {"exp": 14000, "gold": 7000},
+      "completion_bonus": {"exp": 36828, "gold": 18753},
       "event_weights": {"safe": 10, "standard": 25, "risky": 40, "disaster": 25},
       "drop_tier": "high",
       "bounty_tag": "adventure_peril",
       "bounty_progress": 3
     },
     {
+      "route_id": 13,
       "key": "true_spirit_blood",
       "name": "真灵血脉争夺",
       "aliases": ["真灵血脉", "血脉争夺"],
@@ -280,13 +293,14 @@
       "base_gold_per_min": 100,
       "level_bonus_exp": 84,
       "level_bonus_gold": 27,
-      "completion_bonus": {"exp": 22000, "gold": 11000},
+      "completion_bonus": {"exp": 49788, "gold": 26514},
       "event_weights": {"safe": 5, "standard": 25, "risky": 40, "disaster": 30},
       "drop_tier": "high",
       "bounty_tag": "adventure_peril",
       "bounty_progress": 3
     },
     {
+      "route_id": 14,
       "key": "spatial_rift",
       "name": "空间裂缝",
       "aliases": ["裂缝", "空间裂缝"],
@@ -300,7 +314,7 @@
       "base_gold_per_min": 130,
       "level_bonus_exp": 110,
       "level_bonus_gold": 35,
-      "completion_bonus": {"exp": 35000, "gold": 18000},
+      "completion_bonus": {"exp": 66910, "gold": 36535},
       "event_weights": {"safe": 5, "standard": 20, "risky": 40, "disaster": 35},
       "drop_tier": "high",
       "bounty_tag": "adventure_peril",
@@ -421,36 +435,36 @@
     {
       "key": "wall_mural",
       "desc": "躲雨时发现洞壁壁画，可参悟法术获得修为提升。",
-      "chance": 45,
-      "bonus_exp": 3000,
+      "chance": 15,
+      "bonus_exp": 900,
       "bonus_gold": 0
     },
     {
       "key": "ancient_treasure",
       "desc": "古修洞府禁制松动，发现古修的宝物和典籍。",
-      "chance": 30,
-      "bonus_exp": 2000,
-      "bonus_gold": 2500
+      "chance": 8,
+      "bonus_exp": 1500,
+      "bonus_gold": 900
     },
     {
       "key": "spirit_beast_guide",
       "desc": "受到灵兽幼崽指引，发现深处秘密。",
-      "chance": 20,
-      "bonus_exp": 2500,
-      "bonus_gold": 3000
+      "chance": 6,
+      "bonus_exp": 1200,
+      "bonus_gold": 1350
     },
     {
       "key": "rift_puppet",
       "desc": "发现秘境傀儡，可惜无法驱动，只能出售了。",
-      "chance": 35,
+      "chance": 4,
       "bonus_exp": 0,
-      "bonus_gold": 3500
+      "bonus_gold": 1800
     },
     {
       "key": "senior_tribulation",
       "desc": "偶遇大能道友渡劫，远远观之，收益良多。",
-      "chance": 20,
-      "bonus_exp": 5000,
+      "chance": 3,
+      "bonus_exp": 2100,
       "bonus_gold": 0
     }
   ],

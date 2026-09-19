@@ -57,11 +57,11 @@
         "default": 500,
         "hint": "每日签到获得的最多灵石数量。"
       },
-      "BREAKTHROUGH_DEATH_PROBABILITY": {
-        "description": "突破失败死亡概率范围",
+      "BREAKTHROUGH_REGRESSION_PROBABILITY": {
+        "description": "突破失败跌境概率范围",
         "type": "list",
         "default": [0.01, 0.1],
-        "hint": "突破失败时的死亡概率范围。第一个值为最小概率（1%），第二个值为最大概率（10%）。每次突破失败会在此范围内随机一个死亡概率。"
+        "hint": "突破失败时随机触发跌落一个境界的概率范围。第一个值为最小概率（1%），第二个值为最大概率（10%）。每次突破失败会在此范围内随机一个跌境概率。"
       },
       "PAVILION_REFRESH_HOURS": {
         "description": "阁楼刷新时间（小时）",
